@@ -38,6 +38,10 @@ function postsHidden() {
   };
 };
 
+function checkNull(posts) {
+  return (posts == null ? getPosts() : posts); 
+};
+
 function getPosts(post) {
   var base = (post == null ? document : post)
   return [].slice.call(base.getElementsByClassName('thing comment'));
@@ -48,13 +52,13 @@ function getExpandedPosts() {
 };
 
 function getUsers(posts) {
-  posts == null ? posts = getPosts() : null;
+  posts = checkNull(posts);
   var users = posts.map( post => post.dataset.author);
   return [... new Set(users)].filter( user => user != null );
 };
 
 function getActiveUsers(posts) {
-  posts == null ? posts = getPosts() : null;
+  posts = checkNull(posts);
   var activeUsers = postCountsByUser(posts, 2).map( user => user.user );
   return [... new Set(activeUsers)].filter( user => user != null );
 };
@@ -66,11 +70,7 @@ function getControversialUsers(posts) {
 
 function getPostScore(post) {
   var score = post.getElementsByClassName('score unvoted')[0];
-  if (score) {
-    return parseInt(score.getAttribute('title'));
-  } else {
-    return 1
-  };
+  return ( score ? parseInt(score.getAttribute('title')) : 1 )
 };
 
 function replyCount(post) {
@@ -143,12 +143,11 @@ function hasProfanity(post) {
 };
 
 function getProfanePosts(posts) {
-  if (posts == null) posts = getPosts();
   return posts.reduce( (p,c) => (hasProfanity(c) && p.push(c),p), []);
 };
 
 function getPostsWithString(string, cased, posts, user) {
-  posts == null ? posts = (user == null ? getPosts() : getUserPosts(user)) : null;
+  if (posts == null) posts = (user == null ? getPosts() : getUserPosts(user));
   if (cased) { 
     return posts.reduce( (p,c) => (getPostText(c).indexOf(string) != -1 && p.push(c),p), []);
   } else {
@@ -157,9 +156,14 @@ function getPostsWithString(string, cased, posts, user) {
 };
 
 function getPostsRegex(regex, posts, user) {
+  try { 
+    regex = new RegExp(regex);
+  } catch(e) {
+    console.log('Input is not a valid regular expression!');
+    return false;
+  };
   posts == null ? posts = (user == null ? getPosts() : getUserPosts(user)) : null;
-  // TODO: Add regex functionality
-  return posts.reduce( (p,c) => (getPostText(c).indexOf(string) != -1 && p.push(c),p), []);
+  return posts.reduce( (p,c) => ( regex.test(getPostText(c)) && p.push(c),p), []);
 };
 
 function loadMorePosts() {
@@ -210,6 +214,7 @@ function getParentPost(post) {
 };
 
 function getGrandparentPost(post) {
+  if (post == null) return null;
   const grandparent = getParentPost(getParentPost(post));
   return (grandparent?.dataset?.type == 'comment' ? grandparent : null);
 };
@@ -250,7 +255,7 @@ function getDebates() {
 };
 
 function wordCounts(posts) {
-  if (posts == null) posts = getPosts();
+  posts = checkNull(posts);
   const postTexts = posts.map( post => getPostText(post).toLowerCase() );
   var words = postTexts.map( text => text.split(' ') );
   words = words.flat()
@@ -282,7 +287,7 @@ function removeWord(word) {
   return wordsToRemove.some( removeWord => removeWord == word )
 };
 
-function printWordCountsGraoh(wordCounts) {
+function wordCountsGraph(wordCounts) {
   var wordCounts = wordCounts.slice(0, 150);
   for(i = 0; i < wordCounts.length; i++) {
     console.log(`%c ${Array(wordCounts[i][1]).join('█')} ${wordCounts[i][0]}`, 'color: crimson');
@@ -299,16 +304,24 @@ function getPostDownvotes(posts) {
 
 function voteAll(voteButtons) {
   for (var i = 0; i < voteButtons.length; i++) { 
-    setTimeout(voteButtons[i].click(), i*1000); 
+    setTimeout(voteButtons[i]?.click(), i*1000); 
   };
 };
 
 function upvotePosts(posts) {
+  if (posts.length == 0) {
+    console.log('No posts found to upvote!');
+    return;
+  };
   voteAll(getPostUpvotes(posts));
   console.log('Upvoted ' + posts.length + ' posts');
 };
 
 function downvotePosts(posts) {
+  if (posts.length == 0) {
+    console.log('No posts found to downvote!');
+    return;
+  };
   voteAll(getPostDownvotes(posts));
   console.log('Downvoted ' + posts.length + ' posts');
 };
@@ -350,6 +363,26 @@ function echoChamber() {
   console.log('Upvoted ' + highPosts.length + ' high score posts found');
   console.log('Downvoted ' + lowPosts.length + ' low score posts found');
   console.log('Thanks for keeping the echo going!');
+};
+
+function randomVoting(posts, upvoteChance) {
+  posts = checkNull(posts);
+  var upPosts = posts.filter( () => Math.random() < (upvoteChance || 0.5) );
+  var downPosts = posts.filter( post => upPosts.indexOf(post) == -1 );
+  upvotePosts(upPosts);
+  downvotePosts(downPosts);
+  console.log('Randomly voted on ' + posts.length + ' posts');
+};
+
+function randomDropVoting(posts, dropChance, upvoteChance) {
+  posts = checkNull(posts);
+  var dropPosts = posts.filter( () => Math.random() < (dropChance || 0.7) );
+  votePosts = posts.filter( post => dropPosts.indexOf(post) == -1 );
+  var upPosts = votePosts.filter( () => Math.random() < (upvoteChance || 0.7) );
+  var downPosts = votePosts.filter( post => upPosts.indexOf(post) == -1 );
+  upvotePosts(upPosts);
+  downvotePosts(downPosts);
+  console.log('Randomly voted on ' + votePosts.length + ' posts out of ' + posts.length + ' posts found.');
 };
 
 function getCounts(userPosts, postCountMin) {
@@ -394,7 +427,7 @@ function getPostScoresByUser(users, postCountMin) {
 };
 
 function postCountsByUser(posts, postCountMin) {
-  if (posts == null) posts = getPosts();
+  posts = checkNull(posts)
   var authorsByPosts = posts.map( post => post.dataset.author );
   if (postCountMin == null) postCountMin = 1;
   var userPostCounts = getCounts(authorsByPosts, postCountMin);
@@ -440,7 +473,7 @@ function userPostStatistics(users, numUsers) {
       console.log('User with lowest average score:  ' + postScoresByAverage.slice(-1)[0].average + ' ' + postScoresByAverage.slice(-1)[0].user);
       console.log('User with most posts:            ' + postScoresByCount[0].postCount + ' ' + postScoresByCount[0].user);
       if (opComments.length == 0) {
-        console.log('No comments by oriinal poster found.');
+        console.log('No comments by original poster found.');
       } else {
         console.log('Comments by original poster:     ' + opComments.length + ' ' + opComments[0].dataset.author );
       };
