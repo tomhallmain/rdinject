@@ -1,0 +1,27 @@
+{
+  "name": "Injector",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "Injecting stuff",
+  "homepage_url": "https://reddit.com",
+  "content_scripts": [{
+    "matches": [
+      "https://www.reddit.com/u/*/comments/*",
+      "https://www.reddit.com/user/*/comments/*",
+      "https://www.reddit.com/r/*/comments/*"
+    ],
+    "js": [ "background.js" ],
+    "persistent": true
+  }],
+  "browser_action": {
+    "default_title": "Inject!"
+  },
+  "permissions": [
+    "https://*/*",
+    "http://*/*",
+    "activeTab"
+  ],
+  "web_accessible_resources": [
+    "inject.js"
+  ]
+}
