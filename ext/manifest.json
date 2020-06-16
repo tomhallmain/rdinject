@@ -1,8 +1,8 @@
 {
-  "name": "Injector",
-  "version": "0.0.1",
+  "name": "RDIJ",
+  "version": "0.0.2",
   "manifest_version": 2,
-  "description": "Injecting stuff",
+  "description": "Element interaction",
   "homepage_url": "https://reddit.com",
   "content_scripts": [{
     "matches": [
