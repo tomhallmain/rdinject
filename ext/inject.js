@@ -1,3 +1,24 @@
+// Conditional Settings
+
+const initialLink = window.location.href
+const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/
+const showQuery = '?limit=500'
+
+if (postLinkRe.test(initialLink) && !initialLink.includes(showQuery)) {
+  if (postCommentCount() > 400) {
+    window.location.replace(initialLink + showQuery)
+  };
+};
+
+if (postsHidden() && (initialLink.includes(showQuery) || postCommentCount() <= 400)) { 
+  expandPosts()
+};
+
+window.scrollTo(0, 0)
+
+
+// Helper Methods
+
 function sleep(milliseconds) {
   const date = Date.now();
   let currentDate = null;
@@ -34,6 +55,9 @@ function empty(data) {
   for (var i in data) { if (data.hasOwnProperty(i)) count++ }
   return count == 0;
 }
+function getLast(arr) {
+  return arr.slice(-1)[0];
+}
 function getBrowserWidth() {
   return Math.max(
     document.body.scrollWidth,
@@ -45,9 +69,18 @@ function getBrowserWidth() {
 }
 
 
-// ----------------
+// General Methods
 
-function checkNull(posts) { return posts || getPosts(); };
+
+function getPost() {
+  return [].slice.call(document.querySelectorAll('.thing.odd'))
+    .filter( p => p.dataset.type == 'link' )[0];
+};
+function postCommentCount() {
+  return parseInt(getPost().dataset.commentsCount);
+};
+
+function check(posts) { return posts || getPosts(); };
 function getPosts(post) {
   var base = post || document;
   return [].slice.call(base.getElementsByClassName('thing comment'));
@@ -58,13 +91,13 @@ function getExpandedPosts() {
 
 
 function getUsers(posts) {
-  posts = checkNull(posts);
+  posts = check(posts);
   var users = posts.map( post => post.dataset.author);
   return [... new Set(users)].filter( user => user != null );
 };
-function getActiveUsers(posts) {
-  posts = checkNull(posts);
-  var activeUsers = postCountsByUser(posts, 2).map( user => user.user );
+function getActiveUsers(posts, numPosts) {
+  posts = check(posts);
+  var activeUsers = postCountsByUser(posts, numPosts || 2).map( user => user.user );
   return [... new Set(activeUsers)].filter( user => user != null );
 };
 function mostActive(numUsers) {
@@ -139,39 +172,25 @@ function getPostsInScoreRange(min, max, users) {
 };
 
 
-function getPostText(post) {
-  var text = post.getElementsByClassName('usertext-body')[0].textContent;
-  return (typeof(text) == 'string' ? text.slice(0,-2) : '');
-};
-function hasProfanity(post) {
-  var text = getPostText(post).toLowerCase();
-  const profanityDict = ['fuck', ' shit', ' piss', ' bitch', ' cunt']
-  return profanityDict.some( word => text.indexOf(word) != -1 )
-};
-function getProfanePosts(posts) {
-  posts == checkNull(posts);
-  return posts.reduce( (p,c) => (hasProfanity(c) && p.push(c),p), []);
-};
-function searchPosts(string, cased, posts, user) {
-  if (posts == null) posts = (user == null ? getPosts() : getUserPosts(user));
-  if (cased) { 
-    return posts.reduce( (p,c) => (getPostText(c).indexOf(string) != -1 && p.push(c),p), []);
-  } else {
-    return posts.reduce( (p,c) => (getPostText(c).toLowerCase().indexOf(string) != -1 && p.push(c),p), []);
-  };
-};
-function searchPostsRegex(regex, posts, user) {
-  try { 
-    regex = new RegExp(regex);
-  } catch(e) {
-    console.log('Input is not a valid regular expression!');
-    return false;
-  };
-  posts == null ? posts = (user == null ? getPosts() : getUserPosts(user)) : null;
-  return posts.reduce( (p,c) => ( regex.test(getPostText(c)) && p.push(c),p), []);
-};
 
-
+function postRemoved(post) {
+  return postTag(post)?.querySelector('em')?.textContent == '[deleted]';
+};
+function removedPosts(posts) {
+  posts = check(posts)
+  return posts.filter( post => postRemoved(post) );
+};
+function nonremovedPosts(posts) {
+  posts = check(posts)
+  return posts.filter( post => !postRemoved(post) );
+};
+function modPost(post) {
+  return post.dataset.author == 'AutoModerator' || postTag(post)?.querySelector('.moderator') != null;
+};
+function modPosts(posts) {
+  posts = check(posts);
+  return posts.filter( post => modPost(post) );
+};
 function getMorePostsLinks() {
   return [].slice.call(document.getElementsByClassName('thing noncollapsed morechildren'));
 };
@@ -190,11 +209,17 @@ function postsHidden() {
   };
 };
 function loadMorePosts() {
-  var loadPostsLinks = getMorePostsLinks().slice(0, 15);
+  var loadPostsLinksAll = getMorePostsLinks()
+  var endLoadPostLink = getLast(loadPostsLinksAll);
+  var loadPostsLinks = loadPostsLinksAll.slice(0, 15);
   for (var i = 0; i < loadPostsLinks.length; i++) {
     loadPostsLinks[i].getElementsByTagName('a')[0].click();
     console.log('clicked load posts link ' + i);
     sleep(400);
+  };
+  if (endLoadPostLink) {
+    endLoadPostLink.getElementsByTagName('a')[0].click();
+    console.log('clicked end load posts link');
   };
 };
 function openCollapsedPosts() {
@@ -213,6 +238,7 @@ function expandPosts() {
   };
 };
 
+
 function getUserPosts(users) {
   if (users.length == 0) {
     console.log('Please provide a username or list of users in an array.');
@@ -222,10 +248,10 @@ function getUserPosts(users) {
   };
   return getPosts().reduce( (p,c) => (users.indexOf(c.dataset.author) > -1 && p.push(c),p), [] );
 };
-
 function getOpComments() {
   return getPosts().reduce( (p,c) => (c?.querySelector('.userattrs')?.querySelector('.submitter') && p.push(c),p), [] );
 };
+
 
 
 function getBasePosts() { 
@@ -279,22 +305,30 @@ function getDebates() {
 };
 
 
+// Interaction Methods
 
+
+function votablePosts(posts) {
+  posts = check(posts);
+  const today = new Date();
+  const compareDate = today.setDate(today.getDate() - 180);
+  return nonremovedPosts(posts.filter( post => postTime(post) > compareDate && !modPost(post) ));
+};
 function unvotedPosts(posts) {
-  posts = checkNull(posts);
+  posts = check(posts);
   return posts.filter( post => post.querySelector('.entry.unvoted')?.parentElement == post );
 };
+function votedPosts(posts) {
+  posts = check(posts);
+  return posts.filter( post => post.querySelector('.entry.unvoted')?.parentElement != post );
+};
 function upvotedPosts(posts) {
-  posts = checkNull(posts);
+  posts = check(posts);
   return posts.filter( post => post.querySelector('.entry.likes')?.parentElement == post );
 };
 function downvotedPosts(posts) {
-  posts = checkNull(posts);
+  posts = check(posts);
   return posts.filter( post => post.querySelector('.entry.dislikes')?.parentElement == post );
-};
-function votedPosts(posts) {
-  posts = checkNull(posts);
-  return posts.filter( post => post.querySelector('.entry.unvoted')?.parentElement != post );
 };
 function getPostUpvotes(posts) {
   return posts.map( post => post.getElementsByClassName('arrow up')[0] );
@@ -312,16 +346,26 @@ function upvotePosts(posts) {
     console.log('No posts found to upvote!');
     return;
   };
-  voteAll(getPostUpvotes(posts));
-  console.log('Upvoted ' + posts.length + ' posts');
+  votable_posts = votablePosts(posts);
+  var unvotable = posts.length - votable_posts.length;
+  voteAll(getPostUpvotes(votable_posts));
+  console.log('Upvoted ' + votable_posts.length + ' posts');
+  if (unvotable > 0) {
+    console.log(unvotable + ' posts given were unvotable.');
+  };
 };
 function downvotePosts(posts) {
   if (posts.length == 0) {
     console.log('No posts found to downvote!');
     return;
   };
-  voteAll(getPostDownvotes(posts));
-  console.log('Downvoted ' + posts.length + ' posts');
+  votable_posts = votablePosts(posts);
+  var unvotable = posts.length - votable_posts.length;
+  voteAll(getPostDownvotes(votable_posts));
+  console.log('Downvoted ' + votable_posts.length + ' posts');
+  if (unvotable > 0) {
+    console.log(unvotable + ' posts given were unvotable.');
+  };
 };
 function upvoteUserPosts(username) {
   var posts = getUserPosts(username); 
@@ -330,7 +374,7 @@ function upvoteUserPosts(username) {
     return;
   };
   upvotePosts(posts);
-  console.log('Upvoted ' + posts.length + ' posts found for user');
+  console.log('Tried upvoting ' + posts.length + ' posts found for user');
 };
 function downvoteUserPosts(username) {
   var posts = getUserPosts(username);
@@ -339,47 +383,47 @@ function downvoteUserPosts(username) {
     return;
   };
   downvotePosts(posts);
-  console.log('Downvoted ' + posts.length + ' posts found for user');
+  console.log('Tried downvoting ' + posts.length + ' posts found for user');
 };
 
-function up(posts) {
-  posts = posts || unvotedPosts();
+function up(posts, overwriteVotes) {
+  posts = posts || (overwriteVotes ? getPosts() : unvotedPosts());
   randomVoting( posts, 0.7 );
 }
-function down(posts) {
-  posts = posts || unvotedPosts();
-  randomVoting( posts, 0.1, true, 0.7)
+function down(posts, overwriteVotes) {
+  posts = posts || (overwriteVotes ? getPosts() : unvotedPosts());
+  randomVoting( posts, 0.0001, true, 0.7)
 }
 function normalizeScores() {
   var highPosts = getHighPosts();
   var lowPosts = getLowPosts();
   upvotePosts(lowPosts);
   downvotePosts(highPosts); 
-  console.log('Upvoted ' + lowPosts.length + ' low score posts found');
-  console.log('Downvoted ' + highPosts.length + ' high score posts found');
+  console.log('Tried upvoting ' + lowPosts.length + ' low score posts found');
+  console.log('Tried downvoting ' + highPosts.length + ' high score posts found');
 };
 function echoChamber() {
   var highPosts = getHighPosts().filter( () => Math.random() < (voteChance || 0.7));
   var lowPosts = getLowPosts().filter( () => Math.random() < (voteChance || 0.7));
   upvotePosts(highPosts);
   downvotePosts(lowPosts);
-  console.log('Upvoted ' + highPosts.length + ' high score posts found');
-  console.log('Downvoted ' + lowPosts.length + ' low score posts found');
+  console.log('Tried upvoting ' + highPosts.length + ' high score posts found');
+  console.log('Tried downvoting ' + lowPosts.length + ' low score posts found');
   console.log('Thanks for keeping the echo going!');
 };
 function randomVoting(posts, upvoteChance, includeDownvotes, downvoteChance) {
-  posts = checkNull(posts);
+  posts = check(posts);
   var upPosts = posts.filter( () => Math.random() < (upvoteChance || 0.5) );
-  upvotePosts(upPosts);
+  if (!empty(upPosts)) { upvotePosts(upPosts) };
   if (includeDownvotes) {
     var downPosts = posts.filter( post => upPosts.indexOf(post) == -1 )
     if (downvoteChance) { downPosts = downPosts.filter( () => Math.random() < (downvoteChance || 0.5) )};
-    downvotePosts(downPosts);
+    if (!empty(downPosts)) { downvotePosts(downPosts) };
   };
-  console.log('Randomly voted on ' + posts.length + ' posts');
+  console.log('Randomly voted on ' + posts.length + ' posts if votable');
 };
 function randomDropVoting(posts, dropChance, upvoteChance) {
-  posts = checkNull(posts);
+  posts = check(posts);
   var dropPosts = posts.filter( () => Math.random() < (dropChance || 0.7) );
   votePosts = posts.filter( post => dropPosts.indexOf(post) == -1 );
   var upPosts = votePosts.filter( () => Math.random() < (upvoteChance || 0.7) );
@@ -389,23 +433,35 @@ function randomDropVoting(posts, dropChance, upvoteChance) {
   console.log('Randomly voted on ' + votePosts.length + ' posts out of ' + posts.length + ' posts found.');
 };
 function assistControversial(posts) {
-  posts = checkNull(posts);
+  posts = check(posts);
   var users = getControversialUsers(posts);
   upvotePosts(getUserPosts(users));
-  console.log('Upvoated posts for users: ' + users.join(', '));
+  console.log('Upvoted votable posts for users: ' + users.join(', '));
 };
 function hinderProfane(posts) {
-  posts = checkNull(posts);
+  posts = check(posts);
   downvotePosts(getProfanePosts(posts));
 };
 function assistLowScore(posts, users, postCountMin) {
-  posts = checkNull(posts);
+  posts = check(posts);
   var lowUsers = postScoresByUser(users, postCountMin).filter( user =>
     user.scores.some( score => score < 1 )
     ).map( user => user.user );
   upvotePosts(getUserPosts(lowUsers));
-  console.log('Upvoted posts for users: ' + lowUsers.join(', '));
+  console.log('Upvoted votable posts for users: ' + lowUsers.join(', '));
 };
+
+function prevPage() {
+  // Jumps to next page of user comments
+  document.querySelector('.prev-button').getElementsByTagName('a')[0].click() 
+};
+function nextPage() {
+  // Jumps to next page of user comments
+  document.querySelector('.next-button').getElementsByTagName('a')[0].click()
+};
+
+
+// Statistics Methods
 
 
 function getCounts(userPosts, postCountMin) {
@@ -423,16 +479,15 @@ function getCounts(userPosts, postCountMin) {
     };
     prev = userPosts[i];
   };
-  if (postCountMin == null) postCountMin = 1; 
+  postCountMin = postCountMin || 1; 
   counts = counts.filter( user => user.postCount >= postCountMin );
   return counts.sort( (a,b) => b.postCount - a.postCount );
 };
 function postCountsByUser(posts, postCountMin) {
-  posts = checkNull(posts)
+  posts = check(posts)
   var authorsByPosts = posts.map( post => post.dataset.author );
   if (postCountMin == null) postCountMin = 1;
-  var userPostCounts = getCounts(authorsByPosts, postCountMin);
-  return userPostCounts;
+  return getCounts(authorsByPosts, postCountMin);
 };
 
 function getPostScoresByUser(users, postCountMin) { 
@@ -440,26 +495,24 @@ function getPostScoresByUser(users, postCountMin) {
   var dataByUser = new Array;
   for (var i = 0; i < users.length; i++) {
     var userPosts = getUserPosts(users[i]);
-    var postScores = new Array;
     var postScores = userPosts.map( post => postScore(post) );
-    dataByUser.push({ user: users[i], scores: postScores, totalScore: sum(postScores), postCount: postScores.length });
+    var totalScore = sum(postScores);
+    var scoresCount = postScores.length;
+    dataByUser.push({ 
+      user: users[i],
+      scores: postScores,
+      totalScore: sum(postScores),
+      postCount: scoresCount,
+      average: (scoresCount == 0 ? 0 : Math.round(totalScore / scoresCount))
+    });
   };
   if (postCountMin != null) dataByUser = dataByUser.filter( user => user.postCount >= postCountMin );
-  for (var i = 0; i < dataByUser.length; i++) {
-    var userPostCount = dataByUser[i].postCount
-    if (userPostCount == 0) { 
-      dataByUser[i].average = 0
-    } else {
-      dataByUser[i].average = Math.round(dataByUser[i].totalScore / userPostCount);
-    };
-  };
   return dataByUser.sort( (a,b) => b.totalScore - a.totalScore );
 };
 function postScoresByUser(users, postCountMin) {
-  users == null ? users = getUsers() : (typeof(users) == 'string' ? users = [users] : null);
+  users = (typeof(users) == 'string' ? [users] : users || getUsers());
   if (postCountMin == null) userPostCount = 1;
-  var userScoreCounts = getPostScoresByUser(users, postCountMin);
-  return userScoreCounts;
+  return getPostScoresByUser(users, postCountMin);
 };
 
 
@@ -473,21 +526,30 @@ function userPostStatistics(users, numUsers) {
       var postScores = postScoresByUser(getUsers(posts));
       var postScoresByAverage = [].slice.call(postScores).sort( (a,b) => b.average - a.average);
       var postScoresByCount = [].slice.call(postScores).sort( (a,b) => b.postCount - a.postCount);
-      var averageScores = postScores.map( user => user.average);
+      var averageScores = postScores.map( user => user.average );
       var postCounts = postScores.map( user => user.postCount );
+      var postLengths = postLengthsByUser(getUsers(posts));
+      var averageLengths = postLengths.map( user => user.average );
+      var postLengthsByAverage = [].slice.call(postLengths).sort( (a,b) => b.average - a.average);
       var opComments = getOpComments();
       console.log('Note statistics below are based only on posts loaded into the DOM, so they may be incomplete');
       console.log('Total comments found:            ' + posts.length);
       console.log('Total upvoted comments found:    ' + getHighPosts().length);
       console.log('Total downvoted comments found:  ' + getLowPosts().length);
-      // TODO: console.log('Total post vote volatility ' );
+      console.log('Total removed posts found:       ' + removedPosts(posts).length);
+      console.log('Total moderator posts found:     ' + modPosts(posts).length);
+      console.log('Upvote to downvote ratio:        ' + (getHighPosts().length / getLowPosts().length).toFixed() );
+      console.log('Removal ratio x 100:             ' + (removedPosts(posts).length / posts.length * 100).toFixed() );
       console.log('Average comment score:           ' + Math.round(sum(averageScores) / sum(postCounts)));
       console.log('Max comment score:               ' + postScore(maxScorePost) + ' ' + maxScorePost.dataset.author);
       console.log('User with highest total score:   ' + postScores[0].totalScore + ' ' +  postScores[0].user);
       console.log('User with highest average score: ' + postScoresByAverage[0].average + ' ' + postScoresByAverage[0].user);
-      console.log('User with lowest total score:    ' + postScores.slice(-1)[0].totalScore + ' ' + postScores.slice(-1)[0].user);
-      console.log('User with lowest average score:  ' + postScoresByAverage.slice(-1)[0].average + ' ' + postScoresByAverage.slice(-1)[0].user);
+      console.log('User with lowest total score:    ' + getLast(postScores).totalScore + ' ' + getLast(postScores).user);
+      console.log('User with lowest average score:  ' + getLast(postScoresByAverage).average + ' ' + getLast(postScoresByAverage).user);
       console.log('User with most posts:            ' + postScoresByCount[0].postCount + ' ' + postScoresByCount[0].user);
+      console.log('Average comment length           ' + Math.round(sum(averageLengths) / sum(postCounts)));
+      console.log('User with most text written:     ' + postLengths[0].totalLengths + ' ' + postLengths[0].user);
+      console.log('User with longest average text:  ' + postLengthsByAverage[0].average + ' ' + postLengthsByAverage[0].user);
       if (opComments.length == 0) {
         console.log('No comments by original poster found.');
       } else {
@@ -500,7 +562,8 @@ function userPostStatistics(users, numUsers) {
   } else {
     if(typeof(users) == 'string') users = [users];
     for (i = 0; i < users.length; i++) {
-      if (getUserPosts(user).length == 0) {
+      var posts = getUserPosts(users[i]);
+      if (posts.length == 0) {
         console.log('No comments found for user ' + users[i]);
       } else {
         var postScores = postScoresByUser(users[i]);
@@ -510,33 +573,88 @@ function userPostStatistics(users, numUsers) {
         console.log('Downvoted posts:         ' + getLowPosts([users[i]]).length);
         console.log('Total post score:        ' + postScores[i].totalScore);
         console.log('Post score average:      ' + postScores[i].average);
+        console.log('Removed posts:           ' + removedPosts(posts).length);
       };
     };
   };
-  numUsers == null ? console.table(postScores.slice(0, 25)) : console.table(postScores.slick(0, numUsers));
+  console.table(postScores.slice(0, numUsers || 25));
+};
+
+
+// Text Processing Methods
+
+
+function getPostText(post) {
+  var text = post.getElementsByClassName('usertext-body')[0].textContent;
+  return (typeof(text) == 'string' ? text.slice(0,-2) : '');
+};
+function postLength(post) {
+  return getPostText(post).length;
+};
+function postLengthsByUser(users) {
+  users = (typeof(users) == 'string' ? [users] : users || getUsers());
+  // assumes unique set of users provided
+  var dataByUser = new Array;
+  for (var i = 0; i < users.length; i++) {
+    var userPosts = getUserPosts(users[i]);
+    var postLengths = userPosts.map( post => postLength(post) );
+    var totalLengths = sum(postLengths);
+    var lengthsCount = postLengths.length;
+    dataByUser.push({ 
+      user: users[i],
+      lengths: postLengths,
+      totalLengths: totalLengths,
+      postCount: lengthsCount,
+      average: (lengthsCount == 0 ? 0 : Math.round(totalLengths / lengthsCount))
+    });
+  };
+  return dataByUser.sort( (a,b) => b.totalLengths - a.totalLengths );
+};
+function hasProfanity(post) {
+  var text = getPostText(post).toLowerCase();
+  const profanityDict = ['fuck', ' shit', ' piss', ' bitch', ' cunt']
+  return profanityDict.some( word => text.indexOf(word) != -1 )
+};
+function getProfanePosts(posts) {
+  posts == check(posts);
+  return posts.reduce( (p,c) => (hasProfanity(c) && p.push(c),p), []);
+};
+function searchPosts(string, cased, posts, user) {
+  posts = posts || (user == null ? getPosts() : getUserPosts(user));
+  if (cased) { 
+    return posts.reduce( (p,c) => (getPostText(c).indexOf(string) != -1 && p.push(c),p), []);
+  } else {
+    return posts.reduce( (p,c) => (getPostText(c).toLowerCase().indexOf(string.toLowerCase()) != -1 && p.push(c),p), []);
+  };
+};
+function searchPostsRegex(regex, posts, user) {
+  try { 
+    regex = new RegExp(regex);
+  } catch(e) {
+    console.log('Input is not a valid regular expression!');
+    return false;
+  };
+  posts == null ? posts = (user == null ? getPosts() : getUserPosts(user)) : null;
+  return posts.reduce( (p,c) => ( regex.test(getPostText(c)) && p.push(c),p), []);
 };
 
 
 function wordCounts(posts) {
-  posts = checkNull(posts);
-  const postTexts = posts.map( post => getPostText(post).toLowerCase() ).map( text => text.split(' ') );
-  words = postTexts.flat()
+  posts = check(posts);
+  const bags = posts.map( post => bagOfWords(post) ); 
+  words = bags.flat()
+  words = words.filter( word => word.length > 1 && !stopword(word) );
   var counts = Object.create(null);
-  words.forEach( function(word) {
-    cleanedWord = cleanPunctuation(word);
-    removeWord(cleanedWord) ? cleanedWord = '' : null;
-    counts[cleanedWord] = (counts[cleanedWord] ? counts[cleanedWord] + 1 : 1);
-  });
+  words.forEach( word => counts[word] = (counts[word] ? counts[word] + 1 : 1) );
   counts = Object.entries(counts).sort( (a,b) => b[1] - a[1] );
   counts = counts.filter( word => word[0] != '' );
   return counts
 };
 function ngrams(posts, n) {
-  posts = checkNull(posts);
+  posts = check(posts);
   n = n || 2;
-  var postTexts = posts.map( post => getPostText(post).toLowerCase() ).map( text => text.split(' ') );
-  postTexts = postTexts.map( wordv => wordv.map( word => cleanPunctuation(word) ) );
-  var grams = postTexts.map( wordv =>
+  var wordvs = posts.map( post => bagOfWords(post) );
+  var grams = wordvs.map( wordv =>
     wordv.map( (e,i,a) => a.slice(i,i+n).length == n ? a.slice(i,i+n).join(' ') : '' )
          .filter( gram => !(/^\s*$/.test(gram)) )
   );
@@ -552,20 +670,36 @@ function ngramsCounts(posts, n) {
   counts = counts.filter( gram => gram[0] != '' );
   return counts
 };
+function bagOfWords(post) {
+  const wordv = getPostText(post)?.toLowerCase().split(' ');
+  return wordv.map( word => cleanPunctuation(word) );
+};
 function cleanPunctuation(word) {
   // Remove punctuation
-  punctuation = ['.', "\n", '!', '?', ',', '(', ')', '"', '/']
+  const punctuation = ['.', "\n", '!', '?', ',', '(', ')', '"', '/']
   if (punctuation.some( cha => word.indexOf(cha) != -1 )) {
     for (i = 0; i < punctuation.length; i++) {
-      if (word.indexOf(punctuation[i]) != -1) word.replace(/punctuation[i]/g, '');
+      if (word.indexOf(punctuation[i]) != -1) word.replace(/\punctuation[i]/g, '');
     };
   };
   return word
 };
-function removeWord(word) {
+function stopword(word) {
   // Remove unnecessary words from counts
-  const wordsToRemove = ['the', 'to', 'a', 'and', 'of', 'is', 'that', 'in', 'it', 'an'];
-  return wordsToRemove.indexOf(word) > -1;
+  const stopwords = ['me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your',
+    'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers',
+    'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what',
+    'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be',
+    'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'an', 'the',
+    'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with',
+    'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below',
+    'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further',
+    'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each',
+    'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so',
+    'than', 'too', 'very', 'can', 'will', 'just', 'don', 'could', 'should', 'would', 'now', 'll',
+    're', 've', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'mustn', 'needn',
+    'shouldn', 'wasn', 'weren', 'won', 'wouldn']
+  return stopwords.indexOf(word) > -1;
 };
 function wordCountsGraph(wordCounts) {
   wordCounts = wordCounts.slice(0, 150);
