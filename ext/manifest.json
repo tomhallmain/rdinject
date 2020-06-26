@@ -6,9 +6,9 @@
   "homepage_url": "https://reddit.com",
   "content_scripts": [{
     "matches": [
-      "https://www.reddit.com/u/*/comments/*",
-      "https://www.reddit.com/user/*/comments/*",
-      "https://www.reddit.com/r/*/comments/*"
+      "https://www.reddit.com/u/*",
+      "https://www.reddit.com/user/*",
+      "https://www.reddit.com/r/*"
     ],
     "js": [ "background.js" ],
     "persistent": true

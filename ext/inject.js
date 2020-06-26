@@ -1,20 +1,25 @@
-// Conditional Settings
+// Conditional Settings On Page Load
 
-const initialLink = window.location.href
-const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/
-const showQuery = '?limit=500'
+document.getElementsByTagName('body')[0].style.filter = "brightness(80%)"
+document.getElementsByTagName('body')[0].style.backgroundColor = "#92a8d1"
 
-if (postLinkRe.test(initialLink) && !initialLink.includes(showQuery)) {
-  if (postCommentCount() > 400) {
-    window.location.replace(initialLink + showQuery)
-  };
-};
+const baseUrl = 'https://www.reddit.com/'
+const initialLink = window.location.href;
+const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/;
+const showQuery = '?limit=500';
+const postLink = postLinkRe.test(initialLink);
+const showing500Posts = initialLink.includes(showQuery);
 
-if (postsHidden() && (initialLink.includes(showQuery) || postCommentCount() <= 400)) { 
+//if (postLink && !showing500Posts) {
+//  if (postCommentCount() > 400) {
+//    window.location.replace(initialLink + showQuery)
+//  };
+//};
+
+if (postLink && (postCommentCount() > 600 || postCommentCount() <= 400)) { 
   expandPosts()
+  window.scrollTo(0, 0)
 };
-
-window.scrollTo(0, 0)
 
 
 // Helper Methods
@@ -54,10 +59,10 @@ function empty(data) {
   var count = 0;
   for (var i in data) { if (data.hasOwnProperty(i)) count++ }
   return count == 0;
-}
+};
 function getLast(arr) {
   return arr.slice(-1)[0];
-}
+};
 function getBrowserWidth() {
   return Math.max(
     document.body.scrollWidth,
@@ -66,21 +71,29 @@ function getBrowserWidth() {
     document.documentElement.offsetWidth,
     document.documentElement.clientWidth
   );
-}
+};
+function openInNewTab(url) {
+  var win = window.open(url, '_blank');
+  win.focus();
+};
 
 
 // General Methods
 
 
-function getPost() {
+function getOriginalPosts() {
   return [].slice.call(document.querySelectorAll('.thing.odd'))
-    .filter( p => p.dataset.type == 'link' )[0];
+    .concat([].slice.call(document.querySelectorAll('.thing.even')));
+};
+function getOriginalPost() {
+  return getOriginalPosts().filter( p => p.dataset.type == 'link' )[0];
 };
 function postCommentCount() {
-  return parseInt(getPost().dataset.commentsCount);
+  return parseInt(getOriginalPost().dataset.commentsCount);
 };
 
 function check(posts) { return posts || getPosts(); };
+
 function getPosts(post) {
   var base = post || document;
   return [].slice.call(base.getElementsByClassName('thing comment'));
@@ -108,10 +121,28 @@ function getControversialUsers(posts) {
   var users = getActiveUsers();
   return users.filter( user => getHighPosts([user]).length > 0 && getLowPosts([user]).length > 0 );
 };
-
+function scrollUser(user, postIndex) {
+  scroll(getUserPosts(user)[postIndex || 0]);
+};
+function goUser(user) {
+  if (typeof(user) != 'string' || user.length < 1) {
+    console.log('Please provide a username in string form')
+    return;
+  } else {
+    var url = baseUrl + "u/" + user;
+    openInNewTab(url);
+  };
+};
 
 function replyCount(post) { return parseInt(post.dataset.replies); };
 
+function postDepth(post) {
+  if (post == null) { return -1 };
+  if (getOriginalPost() === post) { return 0 };
+  var counter = 1
+  while (getParentPost(post)) { counter++; post = getParentPost(post) };
+  return counter
+};
 function postTime(post) {
   var time = post?.getElementsByTagName('time')[0]?.getAttribute('datetime');
   if (time) { return strToDate(time); } else { return false; };
@@ -185,21 +216,43 @@ function nonremovedPosts(posts) {
   return posts.filter( post => !postRemoved(post) );
 };
 function modPost(post) {
-  return post.dataset.author == 'AutoModerator' || postTag(post)?.querySelector('.moderator') != null;
+  return postTag(post)?.querySelector('.moderator') != null || post.dataset.author == 'AutoModerator';
 };
 function modPosts(posts) {
   posts = check(posts);
   return posts.filter( post => modPost(post) );
 };
-function getMorePostsLinks() {
-  return [].slice.call(document.getElementsByClassName('thing noncollapsed morechildren'));
+function getMorePostsLinks(posts) {
+  if (posts) {
+    return posts.map( post => post.getElementsByClassName('thing noncollapsed morechildren') );
+  } else {
+    return [].slice.call(document.getElementsByClassName('thing noncollapsed morechildren'));
+  };
 };
-function getCollapsedPosts() {
-  return [].slice.call(document.getElementsByClassName('thing collapsed comment'));
+function getExpanders(posts) {
+  if (posts) {
+    return posts.map( post => post.getElementsByClassName('expand')[0] ).flat();
+  } else {
+    return [].slice.call(document.getElementsByClassName('expand'));
+  };
 };
-function postsHidden() {
-  nMorePosts = getMorePostsLinks().length;
-  nHiddenPosts = getCollapsedPosts().length;
+function getCollapsedPosts(posts) {
+  if (posts) {
+    return posts.filter( post => post.className.indexOf(' collapsed ') > -1 );
+  } else {
+    return [].slice.call(document.getElementsByClassName('thing collapsed comment'));
+  };
+};
+function noncollapsedPosts(posts) {
+  if (posts) {
+    return posts.filter( post => post.className.indexOf(' noncollapsed ') > -1 );
+  } else {
+    return [].slice.call(document.getElementsByClassName('thing noncollapsed comment'));
+  };
+};
+function postsHidden(posts) {
+  var nMorePosts = getMorePostsLinks(posts).length;
+  var nHiddenPosts = getCollapsedPosts(posts).length;
   if (nMorePosts > 0 || nHiddenPosts > 0) {
     console.log('Load more posts links found: ' + nMorePosts);
     console.log('Hidden posts found: ' + nHiddenPosts);
@@ -208,9 +261,9 @@ function postsHidden() {
     return false;
   };
 };
-function loadMorePosts() {
+function loadMorePosts(posts) {
   var loadPostsLinksAll = getMorePostsLinks()
-  var endLoadPostLink = getLast(loadPostsLinksAll);
+  var endLoadPostLink = loadPostsLinksAll.length > 14 && getLast(loadPostsLinksAll);
   var loadPostsLinks = loadPostsLinksAll.slice(0, 15);
   for (var i = 0; i < loadPostsLinks.length; i++) {
     loadPostsLinks[i].getElementsByTagName('a')[0].click();
@@ -222,19 +275,28 @@ function loadMorePosts() {
     console.log('clicked end load posts link');
   };
 };
-function openCollapsedPosts() {
-  var collapsedPosts = getCollapsedPosts();
-  for (var i = 0; i < collapsedPosts.length; i++) {
-    setTimeout(collapsedPosts[i].getElementsByClassName('expand')[0].click(), i*200);
-  };
+function openCollapsedPosts(posts) {
+  var collapsedPosts = getCollapsedPosts(posts);
+  var expanders = getExpanders(collapsedPosts);
+  expanders.map( (el,i) => setTimeout(el.click(), i*200) );
   if (collapsedPosts.length > 0) console.log('Expanded ' + collapsedPosts.length + ' collapsed posts');
 };
-function expandPosts() {
-  if (postsHidden()) {
-    loadMorePosts();       sleep(1000);
-    openCollapsedPosts();  sleep(1000);
+function expandPosts(posts) {
+  if (postsHidden(posts)) {
+    loadMorePosts(posts);       sleep(1000);
+    openCollapsedPosts(posts);  sleep(1000);
   } else {
     console.log('No posts to expand!');
+  };
+};
+function collapsePosts(posts, upToLevel) {
+  posts = noncollapsedPosts(posts);
+  if (posts.length > 0) {
+    posts = posts.filter( post => postDepth(post) == (upToLevel || 1) );
+    var expanders = getExpanders(posts);
+    expanders.map( (el,i) => setTimeout(el.click(), i*200) );
+  } else {
+    console.log('No posts found to expand among posts provided!')
   };
 };
 
@@ -402,13 +464,14 @@ function normalizeScores() {
   console.log('Tried upvoting ' + lowPosts.length + ' low score posts found');
   console.log('Tried downvoting ' + highPosts.length + ' high score posts found');
 };
-function echoChamber() {
-  var highPosts = getHighPosts().filter( () => Math.random() < (voteChance || 0.7));
-  var lowPosts = getLowPosts().filter( () => Math.random() < (voteChance || 0.7));
+function echoChamber(voteChance) {
+  voteChance = voteChance || 0.7
+  var highPosts = getHighPosts().filter( () => Math.random() < (voteChance));
+  var lowPosts = getLowPosts().filter( () => Math.random() < (voteChance));
   upvotePosts(highPosts);
   downvotePosts(lowPosts);
-  console.log('Tried upvoting ' + highPosts.length + ' high score posts found');
-  console.log('Tried downvoting ' + lowPosts.length + ' low score posts found');
+  console.log('Tried upvoting ' + highPosts.length + ' high score posts');
+  console.log('Tried downvoting ' + lowPosts.length + ' low score posts');
   console.log('Thanks for keeping the echo going!');
 };
 function randomVoting(posts, upvoteChance, includeDownvotes, downvoteChance) {
@@ -516,6 +579,7 @@ function postScoresByUser(users, postCountMin) {
 };
 
 
+function ups(users, numUsers) { userPostStatistics(users, numUsers) };
 function userPostStatistics(users, numUsers) {
   if (users == null) {
     var posts = getPosts();
@@ -568,11 +632,11 @@ function userPostStatistics(users, numUsers) {
       } else {
         var postScores = postScoresByUser(users[i]);
         console.log('Statistics on current page for user ' + users[i] + ':');
-        console.log('Total number of posts:   ' + postScores[i].postCount);
+        console.log('Total number of posts:   ' + postScores.postCount);
         console.log('Upvoted posts:           ' + getHighPosts([users[i]]).length);
         console.log('Downvoted posts:         ' + getLowPosts([users[i]]).length);
-        console.log('Total post score:        ' + postScores[i].totalScore);
-        console.log('Post score average:      ' + postScores[i].average);
+        console.log('Total post score:        ' + postScores.totalScore);
+        console.log('Post score average:      ' + postScores.average);
         console.log('Removed posts:           ' + removedPosts(posts).length);
       };
     };
@@ -712,3 +776,6 @@ function wordCountsGraph(wordCounts) {
     console.log(`%c ${Array(countLength).join('█')} ${word}`, 'color: green');
   };
 };
+function wcg(wordCounts) { wordCountsGraph(wordCounts) };
+
+
