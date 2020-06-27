@@ -1,4 +1,3 @@
-var s = document.createElement('script');
 
 // listen for our browserAction to be clicked
 //chrome.browserAction.onClicked.addListener(function (tab) {
@@ -8,8 +7,14 @@ var s = document.createElement('script');
 //	});
 //});
 
-s.src = chrome.runtime.getURL('inject.js');
-s.onload = function() {
-    this.remove();
+function createScript(fileName) {
+  var s = document.createElement('script');
+  s.src = chrome.runtime.getURL(fileName);
+  s.onload = function() { this.remove() };
+  (document.head || document.documentElement).appendChild(s);
 };
-(document.head || document.documentElement).appendChild(s);
+
+files = ['helpers.js', 'base.js', 'agent.js', 'reporter.js']
+files.map( file => createScript(file) );
+
+
