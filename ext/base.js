@@ -371,8 +371,9 @@ function highlightMostActive() {
     attrs = userAttrs(post);
     attrs.textContent = (attrs.textContent + '(' 
       + postCounts[users.indexOf(post.dataset.author)].postCount + ' posts found)');
-    userAttrs(post).style.color = 'crimson'
-    userAttrs(post).style.fontWeight = 'bold'
+    userAttrs(post).style.color = 'crimson';
+    userAttrs(post).style.fontWeight = 'bold';
+    userAttrs(post).style.visibility = 'visible';
   });
 };
 
