@@ -1,6 +1,6 @@
 {
   "name": "RDIJ",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "manifest_version": 2,
   "description": "Element interaction",
   "homepage_url": "https://reddit.com",
@@ -10,21 +10,26 @@
       "https://www.reddit.com/user/*",
       "https://www.reddit.com/r/*"
     ],
-    "js": [ "background.js" ],
+    "js": [ "loader.js" ],
     "persistent": true
   }],
   "browser_action": {
-    "default_title": "Inject!"
+    "default_icon": "loweffortalien.png",
+    "default_title": "Click to open extension",
+    "default_popup": "popup/index.html"
   },
   "permissions": [
     "https://*/*",
     "http://*/*",
-    "activeTab"
+    "activeTab",
+    "tabs"
   ],
+  "content_security_policy": "script-src 'self' https://apis.google.com; object-src 'self'",
   "web_accessible_resources": [
     "helpers.js",
     "base.js",
     "agent.js",
-    "reporter.js"
+    "reporter.js",
+    "popup/popup.js"
   ]
 }

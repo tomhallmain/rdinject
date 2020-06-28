@@ -59,7 +59,10 @@ function getActiveUsers(posts, numPosts) {
   return [... new Set(activeUsers)].filter( user => user != null );
 };
 function mostActive(numUsers) {
-  var mostActiveUsers = postCountsByUser(null, 2).slice(0, numUsers || 10);
+  return postCountsByUser(null, 3).slice(0, numUsers || 10);
+};
+function mostActiveTable(numUsers) {
+  var mostActiveUsers = mostActive();
   console.table(mostActiveUsers); 
 };
 function getControversialUsers(posts) {
@@ -281,34 +284,8 @@ function getChildPosts(post) {
 function postTag(post) {
   return post.querySelector('.tagline');
 };
-function getDebates() {
-  var debates = new Array;
-  getBasePosts().map( (basePost) => {
-    var children = getChildPosts(basePost);
-    var leaves = children.filter( post =>
-      getChildPosts(post).length <= 1 && getParentPost(getGrandparentPost(post)) != null
-    );
-    if (leaves.some( leaf => getGrandparentPost(leaf)?.dataset.author == leaf.dataset.author )) {
-      postTag(basePost).style.backgroundColor = 'yellow'
-      var debaters = postCountsByUser(children, 2).map( user => user.user );
-      var debateBase = {
-        basePost: basePost,
-        basePostAuthor: basePost.dataset.author,
-        debaters: debaters,
-        debatePosts: []
-      };
-      debaters.map( (user, i) => {
-        color = ['red', 'blue', 'green', 'orange', 'purple', 'gray'][i % 6];
-        posts = getUserPosts(user);
-        debateBase.debatePosts.push(posts)
-        posts.map( post => postTag(post).style.backgroundColor = color );
-      });
-      debateBase.debatePosts = debateBase.debatePosts.flat()
-      debates.push(debateBase);
-    };
-  });
-  scroll(debates[0].basePost);
-  return debates;
+function userAttrs(post) {
+  return post.querySelector('.userattrs');
 };
 
 
@@ -346,5 +323,58 @@ function searchPostsRegex(regex, posts, user) {
   posts == null ? posts = (user == null ? getPosts() : getUserPosts(user)) : null;
   return posts.reduce( (p,c) => ( regex.test(getPostText(c)) && p.push(c),p), []);
 };
+
+
+function getDebates() {
+  var debates = new Array;
+  colorset = ['red', 'blue', 'green', 'orange', 'purple', 'gray', 'pink',
+    'black', 'yellow', 'saddlebrown', 'maroon']
+  getBasePosts().map( (basePost) => {
+    var children = getChildPosts(basePost);
+    var leaves = children.filter( post =>
+      getChildPosts(post).length <= 1 && getParentPost(getGrandparentPost(post)) != null
+    );
+    if (leaves.some( leaf => getGrandparentPost(leaf)?.dataset.author == leaf.dataset.author )) {
+      var debaters = postCountsByUser(children, 2).map( user => user.user );
+      var debateBase = {
+        basePost: basePost,
+        basePostAuthor: basePost.dataset.author,
+        debaters: debaters,
+        debatePosts: []
+      };
+      debaters.map( (user, i) => {
+        color = colorset[i % colorset.length];
+        posts = getUserPosts(user);
+        debateBase.debatePosts.push(posts)
+        posts.map( post => {
+          postTag(post).style.backgroundColor = color;
+          postTag(post).style.color = 'white'
+        });
+      });
+      debateBase.debatePosts = debateBase.debatePosts.flat()
+      postTag(basePost).style.fontWeight = 'bold'
+      userAttrs(basePost).textContent = (userAttrs(basePost).textContent 
+        + '(Debated post: ' + debateBase.debaters.length + ' debaters)')
+      debates.push(debateBase);
+    };
+  });
+  scroll(debates[0].basePost);
+  return debates;
+};
+
+
+function highlightMostActive() {
+  var postCounts = mostActive();
+  var users = postCounts.map(user => user.user);
+  var posts = getUserPosts(users).flat();
+  posts.map( post => {
+    attrs = userAttrs(post);
+    attrs.textContent = (attrs.textContent + '(' 
+      + postCounts[users.indexOf(post.dataset.author)].postCount + ' posts found)');
+    userAttrs(post).style.color = 'crimson'
+    userAttrs(post).style.fontWeight = 'bold'
+  });
+};
+
 
 

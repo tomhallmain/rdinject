@@ -149,12 +149,14 @@ function assistLowScore(posts, users, postCountMin) {
 };
 
 function prevPage() {
-  // Jumps to next page of user comments
-  document.querySelector('.prev-button').getElementsByTagName('a')[0].click()
+  // Jumps to previous page of user comments
+  (document.querySelector('.prev-button')?.getElementsByTagName('a')[0].click() ||
+    console.log('Previous page button not found'));
 };
 function nextPage() {
   // Jumps to next page of user comments
-  document.querySelector('.next-button').getElementsByTagName('a')[0].click()
+  (document.querySelector('.next-button')?.getElementsByTagName('a')[0].click() ||
+    console.log('Next page button not found'));
 };
 
 

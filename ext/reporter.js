@@ -25,7 +25,7 @@ function getCounts(userPosts, postCountMin) {
 };
 function postCountsByUser(posts, postCountMin) {
   posts = check(posts)
-  var authorsByPosts = posts.map( post => post.dataset.author );
+  var authorsByPosts = posts.map( post => post.dataset.author ).filter( user => user );
   if (postCountMin == null) postCountMin = 1;
   return getCounts(authorsByPosts, postCountMin);
 };
