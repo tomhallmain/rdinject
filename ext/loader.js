@@ -26,7 +26,7 @@ function messageHandler(message) {
 
 function fireEvent(toFire) {
   var s = document.createElement('script');
-  s.appendChild(document.createTextNode('('+ toFire +')();'));
+  s.appendChild(document.createTextNode(toFire + ';'));
   (document.head || document.documentElement).appendChild(s);
 };
 
