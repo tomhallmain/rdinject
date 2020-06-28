@@ -14,7 +14,7 @@
     "persistent": true
   }],
   "browser_action": {
-    "default_icon": "loweffortalien.png",
+    "default_icon": "assets/loweffortalien.png",
     "default_title": "Click to open extension",
     "default_popup": "popup/index.html"
   },
