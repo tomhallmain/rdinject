@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
   mostActiveButton.addEventListener('click', function() { mostActiveBtnPressed() });
   wordCountsButton.addEventListener('click', function() { wordCountsBtnPressed() });
   ngramsButton.addEventListener('click', function() { ngramsBtnPressed() });
+  searchUsers.addEventListener();
+  searchPosts.addEventListener();
 });
 
 
@@ -55,4 +57,11 @@ function ngramsBtnPressed() {
   console.log('button pressed');
   sendMsg('ngrams');
 };
+function searchUsers(string) {
+
+};
+function searchPosts(string) {
+
+};
+
 

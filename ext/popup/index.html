@@ -1,27 +1,31 @@
 
 <!DOCTYPE html>
 <html>
-<head>
-<link rel="stylesheet" type="text/css" href="style.css">
-</head>
-<body>
+	<head>
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	<body>
 
-<h1>RDInject</h1>
+		<h1>RDInject</h1>
 
-<p>Select from the below options to interact with the page. If nothing changes
-on the page, check the browser console for output.</p>
+		<p>Select from the below options to interact with the page. 
+		If nothing changes on the page, check the browser console 
+		for output.</p>
 
-<button type="button" class="userPostStats">User Post Stats</button>
-<button type="button" class="mostActive">Highlight Most Active</button>
-<button type="button" class="getDebates">Get Debates</button>
-<button type="button" class="wordCounts">Word Counts</button>
-<button type="button" class="ngrams">Ngrams</button>
+		<div class="btn-group" style="width:100%">
+			<button type="button" class="userPostStats" style="width:33.3%">User Post Stats</button>
+			<button type="button" class="mostActive" style="width:33.3%">Highlight Most Active</button>
+			<button type="button" class="getDebates" style="width:33.3%">Get Debates</button>
+		</div>
+		<div class="btn-group" style="width:100%">
+			<button type="button" class="wordCounts" style="width:50%">Word Counts</button>
+			<button type="button" class="ngrams" style="width:50%">Ngrams</button>
+		</div>
+		<p>Search for a user to return their posts:</p>
+		<input id="userinput"></input>
 
-<p>Search for a user to return their posts:</p>
-<input id="userinput"></input>
 
-
-</body>
+	</body>
 </html>
 
 <script type='text/javascript'  src="popup.js"></script>

@@ -6,6 +6,7 @@
   "homepage_url": "https://reddit.com",
   "content_scripts": [{
     "matches": [
+      "https://www.reddit.com/",
       "https://www.reddit.com/u/*",
       "https://www.reddit.com/user/*",
       "https://www.reddit.com/r/*"
