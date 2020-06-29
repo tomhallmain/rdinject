@@ -82,37 +82,50 @@ function downvoteUserPosts(username) {
 function up(posts, overwriteVotes) {
   posts = posts || (overwriteVotes ? getPosts() : unvotedPosts());
   randomVoting( posts, 0.7 );
-}
+};
 function down(posts, overwriteVotes) {
   posts = posts || (overwriteVotes ? getPosts() : unvotedPosts());
   randomVoting( posts, 0.0001, true, 0.7)
-}
-function normalizeScores() {
-  var highPosts = getHighPosts();
-  var lowPosts = getLowPosts();
-  upvotePosts(lowPosts);
-  downvotePosts(highPosts);
-  console.log('Tried upvoting ' + lowPosts.length + ' low score posts found');
-  console.log('Tried downvoting ' + highPosts.length + ' high score posts found');
+};
+function getHighLowPosts(voteChance) {
+  voteChance = voteChance || 0.7
+  highPosts = getHighPosts();
+  lowPosts = getLowPosts();
+  return {
+    highTotal: highPosts.length,
+    lowTotal: lowPosts.length,
+    voteHigh: chanceFilter(highPosts, voteChance),
+    voteLow: chanceFilter(lowPosts, voteChance)
+  };
+};
+function normalizeScores(voteChance) {
+  const {high, low, voteHigh, voteLow} = getHighLowPosts(voteChance);
+  upvotePosts(voteLow);
+  downvotePosts(voteHigh);
+  console.log('Tried upvoting ' + voteLow.length + ' low score posts ' +
+    'out of ' + low.length + ' total found');
+  console.log('Tried downvoting ' + voteHigh.length + ' high score posts ' + 
+    'out of ' + high.length + ' total found');
+  console.log('Less craziness is usually good.');
 };
 function echoChamber(voteChance) {
-  voteChance = voteChance || 0.7
-  var highPosts = getHighPosts().filter( () => Math.random() < (voteChance));
-  var lowPosts = getLowPosts().filter( () => Math.random() < (voteChance));
-  upvotePosts(highPosts);
-  downvotePosts(lowPosts);
-  console.log('Tried upvoting ' + highPosts.length + ' high score posts');
-  console.log('Tried downvoting ' + lowPosts.length + ' low score posts');
+  const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(voteChance);
+  upvotePosts(voteHigh);
+  downvotePosts(voteLow);
+  console.log('Tried upvoting ' + voteHigh.length + ' high score posts ' +
+    'out of ' + highTotal + ' total found');
+  console.log('Tried downvoting ' + voteLow.length + ' low score posts ' +
+    'out of ' + lowTotal + ' total found');
   console.log('Thanks for keeping the echo going!');
 };
 function randomVoting(posts, upvoteChance, includeDownvotes, downvoteChance) {
   posts = check(posts);
-  var upPosts = posts.filter( () => Math.random() < (upvoteChance || 0.5) );
+  var upPosts = chanceFilter(posts, (upvoteChance || 0.5));
   if (!empty(upPosts)) { upvotePosts(upPosts) };
   if (includeDownvotes) {
     var downPosts = posts.filter( post => upPosts.indexOf(post) == -1 )
     if (downvoteChance) { 
-      downPosts = downPosts.filter( () => Math.random() < (downvoteChance || 0.5) )
+      downPosts = chanceFilter(downPosts, (downvoteChance || 0.5));
     };
     if (!empty(downPosts)) { downvotePosts(downPosts) };
   };
@@ -120,14 +133,14 @@ function randomVoting(posts, upvoteChance, includeDownvotes, downvoteChance) {
 };
 function randomDropVoting(posts, dropChance, upvoteChance) {
   posts = check(posts);
-  var dropPosts = posts.filter( () => Math.random() < (dropChance || 0.7) );
+  var dropPosts = chanceFilter(posts, (dropChance || 0.7));
   votePosts = posts.filter( post => dropPosts.indexOf(post) == -1 );
-  var upPosts = votePosts.filter( () => Math.random() < (upvoteChance || 0.7) );
+  var upPosts = chanceFilter(votePosts, (upvoteChance || 0.7));
   var downPosts = votePosts.filter( post => upPosts.indexOf(post) == -1 );
   upvotePosts(upPosts);
   downvotePosts(downPosts);
-  console.log('Randomly voted on ' + votePosts.length 
-    + ' posts out of ' + posts.length + ' posts found.');
+  console.log('Randomly voted on ' + votePosts.length +
+    ' posts out of ' + posts.length + ' posts found.');
 };
 function assistControversial(posts) {
   posts = check(posts);
@@ -149,14 +162,14 @@ function assistLowScore(posts, users, postCountMin) {
 };
 
 function prevPage() {
-  // Jumps to previous page of user comments
-  (document.querySelector('.prev-button')?.getElementsByTagName('a')[0].click() ||
-    console.log('Previous page button not found'));
+  // Jumps to previous page of posts
+  const button = document.querySelector('.prev-button')?.getElementsByTagName('a')[0]
+  button ? button.click() : console.log('Previous page button not found');
 };
 function nextPage() {
-  // Jumps to next page of user comments
-  (document.querySelector('.next-button')?.getElementsByTagName('a')[0].click() ||
-    console.log('Next page button not found'));
+  // Jumps to next page of posts
+  button = document.querySelector('.next-button')?.getElementsByTagName('a')[0]
+  button ? button.click() : console.log('Next page button not found');
 };
 
 

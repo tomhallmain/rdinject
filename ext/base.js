@@ -363,7 +363,7 @@ function getDebates() {
 };
 
 
-function highlightMostActive() {
+function highlightActive() {
   var postCounts = mostActive();
   var users = postCounts.map(user => user.user);
   var posts = getUserPosts(users).flat();
@@ -375,6 +375,7 @@ function highlightMostActive() {
     userAttrs(post).style.fontWeight = 'bold';
     userAttrs(post).style.visibility = 'visible';
   });
+  return postCounts;
 };
 
 

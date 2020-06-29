@@ -2,22 +2,24 @@
 // Setup
 
 document.addEventListener('DOMContentLoaded', function() {
-  var postStatsButton = document.querySelector('.userPostStats');
-  var debatesButton = document.querySelector('.getDebates');
-  var mostActiveButton = document.querySelector('.mostActive');
-  var wordCountsButton = document.querySelector('.wordCounts');
-  var ngramsButton = document.querySelector('.ngrams');
   var searchUsers = document.querySelector('.searchUsers');
   var searchPosts = document.querySelector('.searchPosts');
-  postStatsButton.addEventListener('click', function() { postStatsBtnPressed() });
-  debatesButton.addEventListener('click', function() { getDebatesBtnPressed() });
-  mostActiveButton.addEventListener('click', function() { mostActiveBtnPressed() });
-  wordCountsButton.addEventListener('click', function() { wordCountsBtnPressed() });
-  ngramsButton.addEventListener('click', function() { ngramsBtnPressed() });
-  searchUsers.addEventListener();
+  mapBtn( select('.userPostStats'), 'userPostStats'  );
+  mapBtn( select('.getDebates'),    'getDebates'     );
+  mapBtn( select('.mostActive'),    'highlightActive');
+  mapBtn( select('.wordCounts'),    'wordCounts'     );
+  mapBtn( select('.ngrams'),        'ngrams'         );
+  mapBtn( select('.up'),            'up'             );
+  mapBtn( select('.down'),          'down'           );
+  mapBtn( select('.echo'),          'echo'           );
+  mapBtn( select('.normalize'),     'normalize'      );
+  searchUser.addEventListener();
   searchPosts.addEventListener();
 });
 
+function select(className) {
+  return document.querySelector(className);
+}
 
 // Message passing
 
@@ -37,26 +39,15 @@ function sendMsg(msg) {
 
 // Actions
 
-function getDebatesBtnPressed() { 
-  console.log('button pressed');
-  sendMsg('getDebates');
+function mapBtn(btn, msg) {
+  btn.addEventListener('click', function() { btnPressed(msg) });
 };
-function mostActiveBtnPressed() { 
-  console.log('button pressed');
-  sendMsg('highlightMostActive');
+
+function btnPressed(msg) {
+  console.log('button pressed for ' + msg);
+  sendMsg(msg);
 };
-function postStatsBtnPressed() { 
-  console.log('button pressed');
-  sendMsg('userPostStatistics');
-};
-function wordCountsBtnPressed() { 
-  console.log('button pressed');
-  sendMsg('wordCounts');
-};
-function ngramsBtnPressed() { 
-  console.log('button pressed');
-  sendMsg('ngrams');
-};
+
 function searchUsers(string) {
 
 };
