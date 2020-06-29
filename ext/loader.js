@@ -13,18 +13,19 @@ chrome.runtime.onMessage.addListener(messageHandler);
 
 function messageHandler(message) {
   console.log('Content script received message: ' + message);
-  switch (message) {
-    case 'userPostStats':   fireEvent('ups()'); break;
-    case 'getDebates':      fireEvent('getDebates()'); break;
-    case 'highlightActive': fireEvent('highlightActive()'); break;
-    case 'wordCounts':      fireEvent('wcg(wordCounts())'); break;
-    case 'ngrams':          fireEvent('wcg(ngramsCounts())'); break;
-    case 'up':              fireEvent('up()'); break;
-    case 'down':            fireEvent('down()'); break;
-    case 'echo':            fireEvent('echoChamber()'); break;
-    case 'normalize':       fireEvent('normalizeScores()'); break;
+  event = (switch (message) {
+    case 'userPostStats':   'ups()';               break;
+    case 'getDebates':      'getDebates()';        break;
+    case 'highlightActive': 'highlightActive()';   break;
+    case 'wordCounts':      'wcg(wordCounts())';   break;
+    case 'ngrams':          'wcg(ngramsCounts())'; break;
+    case 'up':              'up()';                break;
+    case 'down':            'down()';              break;
+    case 'echo':            'echoChamber()';       break;
+    case 'normalize':       'normalizeScores()';   break;
     default: console.log('Message not understood');
-  };
+  });
+  if (event) fireEvent(event);
 };
 
 function fireEvent(toFire) {
