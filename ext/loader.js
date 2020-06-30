@@ -19,7 +19,7 @@ function messageHandler(message) {
   var textSearch = message['searchPosts'];
   const postFilter = ( 
     textSearch ? 'searchPosts(' + "'" + textSearch + "'" + ', null, null, ' + user + ')' :
-    'searchPostsRegex("*", null, null, ' + user + ')'
+    'searchPostsRegex(".+", null, ' + user + ')'
   );
   var event = (function(selection, user, postFilter) {
     switch (selection) {
@@ -34,6 +34,8 @@ function messageHandler(message) {
       case 'normalize':       return 'normalizeScores()'; break;
       case 'scroll':          return 'scroll(' + postFilter + ')'; break;
       case 'reserved':        return ''; break;
+      case 'expand':          return 'expandPosts()'; break;
+      case 'collapse':        return 'collapsePosts(' + postFilter + ')'; break;
       default: console.log('Message not understood');
     };
   })(selection, user, postFilter);

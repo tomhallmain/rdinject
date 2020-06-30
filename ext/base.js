@@ -193,7 +193,7 @@ function getCollapsedPosts(posts) {
 };
 function noncollapsedPosts(posts) {
   if (posts) {
-    return posts.filter( post => post.className.indexOf(' noncollapsed ') > -1 );
+    return posts.filter( post => post.className.indexOf('noncollapsed') > -1 );
   } else {
     return [].slice.call(document.getElementsByClassName('thing noncollapsed comment'));
   };
@@ -240,12 +240,13 @@ function expandPosts(posts) {
 function collapsePosts(posts, upToLevel) {
   posts = noncollapsedPosts(posts);
   if (posts.length > 0) {
-    posts = posts.filter( post => postDepth(post) == (upToLevel || 1) );
+    posts = posts.filter( post => postDepth(post) >= (upToLevel || 1) );
     var expanders = getExpanders(posts);
-    expanders.map( (el,i) => setTimeout(el.click(), i*200) );
+    expanders.map( (el,i) => setTimeout(el?.click(), i*200) );
   } else {
     console.log('No posts found to expand among posts provided!')
   };
+  console.log('collapsed ' + posts.length + ' posts');
 };
 
 
@@ -320,7 +321,7 @@ function searchPostsRegex(regex, posts, user) {
     console.log('Input is not a valid regular expression!');
     return false;
   };
-  posts == null ? posts = (user == null ? getPosts() : getUserPosts(user)) : null;
+  posts = (posts ? posts : (user ? getUserPosts(user) : getPosts()));
   return posts.reduce( (p,c) => ( regex.test(getPostText(c)) && p.push(c),p), []);
 };
 
@@ -365,17 +366,21 @@ function getDebates() {
 
 function highlightActive() {
   var postCounts = mostActive();
-  var users = postCounts.map(user => user.user);
-  var posts = getUserPosts(users).flat();
-  posts.map( post => {
-    attrs = userAttrs(post);
-    attrs.textContent = (attrs.textContent + '(' 
-      + postCounts[users.indexOf(post.dataset.author)].postCount + ' posts found)');
-    userAttrs(post).style.color = 'crimson';
-    userAttrs(post).style.fontWeight = 'bold';
-    userAttrs(post).style.visibility = 'visible';
-  });
-  return postCounts;
+  if (!empty(postCounts)) {
+    var users = postCounts.map(user => user.user);
+    var posts = getUserPosts(users).flat();
+    posts.map( post => {
+      attrs = userAttrs(post);
+      attrs.textContent = (attrs.textContent + '(' 
+        + postCounts[users.indexOf(post.dataset.author)].postCount + ' posts found)');
+      userAttrs(post).style.color = 'crimson';
+      userAttrs(post).style.fontWeight = 'bold';
+      userAttrs(post).style.visibility = 'visible';
+    });
+    return postCounts;
+  } else {
+    console.log('No highly active users found in loaded posts!');
+  };
 };
 
 

@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
   mapBtn( select('.normalize'),     'normalize'      );
   mapBtn( select('.scroll'),        'scroll'         );
   mapBtn( select('.reserved'),      'reserved'       );
+  mapBtn( select('.expand'),        'expand'         );
+  mapBtn( select('.collapse'),      'collapse'       );
   mapInput( select('.searchUsers')  );
   mapInput( select('.searchPosts')  );
 });
