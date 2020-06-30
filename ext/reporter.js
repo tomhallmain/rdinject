@@ -120,18 +120,20 @@ function userPostStatistics(users, numUsers) {
       if (posts.length == 0) {
         console.log('No comments found for user ' + users[i]);
       } else {
-        var postScores = postScoresByUser(users[i]);
+        var userPostScores = postScoresByUser(users[i])[0];
+        var postScores = postScores || [];
+        postScores.concat(userPostScores);
         console.log('Statistics on current page for user ' + users[i] + ':');
-        console.log('Total number of posts:   ' + postScores.postCount);
+        console.log('Total number of posts:   ' + userPostScores.postCount);
         console.log('Upvoted posts:           ' + getHighPosts([users[i]]).length);
         console.log('Downvoted posts:         ' + getLowPosts([users[i]]).length);
-        console.log('Total post score:        ' + postScores.totalScore);
-        console.log('Post score average:      ' + postScores.average);
+        console.log('Total post score:        ' + userPostScores.totalScore);
+        console.log('Post score average:      ' + userPostScores.average);
         console.log('Removed posts:           ' + removedPosts(posts).length);
       };
     };
   };
-  console.table(postScores.slice(0, numUsers || 25));
+  if (!empty(postScores)) console.table(postScores.slice(0, numUsers || 25));
 };
 
 

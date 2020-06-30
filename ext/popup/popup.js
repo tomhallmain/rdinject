@@ -1,9 +1,9 @@
 
 // Setup
 
+var filterSettings = {};
+
 document.addEventListener('DOMContentLoaded', function() {
-  var searchUsers = document.querySelector('.searchUsers');
-  var searchPosts = document.querySelector('.searchPosts');
   mapBtn( select('.userPostStats'), 'userPostStats'  );
   mapBtn( select('.getDebates'),    'getDebates'     );
   mapBtn( select('.mostActive'),    'highlightActive');
@@ -13,13 +13,23 @@ document.addEventListener('DOMContentLoaded', function() {
   mapBtn( select('.down'),          'down'           );
   mapBtn( select('.echo'),          'echo'           );
   mapBtn( select('.normalize'),     'normalize'      );
-  searchUser.addEventListener();
-  searchPosts.addEventListener();
+  mapBtn( select('.scroll'),        'scroll'         );
+  mapBtn( select('.reserved'),      'reserved'       );
+  mapInput( select('.searchUsers')  );
+  mapInput( select('.searchPosts')  );
 });
 
 function select(className) {
   return document.querySelector(className);
 }
+function mapBtn(btn, msgVal) {
+  btn.addEventListener('click', function() { btnPressed(msgVal) });
+};
+function mapInput(input) {
+  input.addEventListener('change', function() { 
+    updateFilter(input.className, input.value);
+  });
+};
 
 // Message passing
 
@@ -27,32 +37,31 @@ let activeTabParams = {
   active: true,
   currentWindow: true
 };
-function sendMsg(msg) {
+function sendMsg(message, filterSettings) {
   chrome.tabs.query(activeTabParams, messagePush);
   function messagePush(tabs) {
-    console.log(msg);
-    console.log(tabs[0]);
-    chrome.tabs.sendMessage(tabs[0].id, msg);
+    console.log(message);
+    console.log({'tab': tabs[0]});
+    chrome.tabs.sendMessage(tabs[0].id, message);
   };
 };
 
 
 // Actions
 
-function mapBtn(btn, msg) {
-  btn.addEventListener('click', function() { btnPressed(msg) });
+function btnPressed(msgVal) {
+  console.log('button pressed for ' + msgVal);
+  sendMsg(applyFilter({'buttonPressed': msgVal}));
 };
 
-function btnPressed(msg) {
-  console.log('button pressed for ' + msg);
-  sendMsg(msg);
+function applyFilter(msg) {
+  return Object.assign({}, msg, filterSettings);
 };
 
-function searchUsers(string) {
-
+function updateFilter(inputClass, input) {
+  filterSettings[inputClass] = input;
+  console.log('changed filter for ' + inputClass + ' to ' + input);
 };
-function searchPosts(string) {
 
-};
 
 

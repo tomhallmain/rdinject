@@ -15,11 +15,11 @@ img {
 }
 
 .btn-group button {
-  background-color: darkblue; /* Green background */
-  border: 1px solid blue; /* Green border */
-  color: white; /* White text */
-  padding: 10px 24px; /* Some padding */
-  cursor: pointer; /* Pointer/hand icon */
+  background-color: darkblue;
+  border: 1px solid blue;
+  color: white;
+  padding: 10px 24px;
+  cursor: pointer;
   float: left; /* Float the buttons side by side */
 }
 
