@@ -1,29 +1,29 @@
 
 // Conditional Settings On Page Load
 
-document.getElementsByTagName('body')[0].style.filter = "brightness(80%)"
-document.getElementsByTagName('body')[0].style.backgroundColor = "#92a8d1"
+document.getElementsByTagName('body')[0].style.filter = "brightness(80%)";
+document.getElementsByTagName('body')[0].style.backgroundColor = "#92a8d1";
 
-const baseUrl = 'https://www.reddit.com/'
+const baseUrl = 'https://www.reddit.com/';
 const initialLink = window.location.href;
 const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/;
 const postLink = postLinkRe.test(initialLink);
 
-//const showQuery = '?limit=500';
-//const showing500Posts = initialLink.includes(showQuery);
-//if (postLink && !showing500Posts) {
-//  if (postCommentCount() > 400) {
-//    window.location.replace(initialLink + showQuery)
-//  };
-//};
+/*
+const showQuery = '?limit=500';
+const showing500Posts = initialLink.includes(showQuery);
+if (postLink && !showing500Posts) {
+  if (postCommentCount() > 400) {
+    window.location.replace(initialLink + showQuery)
+  };
+};
+*/
 
 if (postLink && (postCommentCount() > 600)) {
-  expandPosts()
-  window.scrollTo(0, 0)
+  expandPosts();
+  window.scrollTo(0, 0);
 };
 
-[].slice.call(document.querySelectorAll('.promotedlink')).map( el => el.innerHTML = '' )
-[].slice.call(document.getElementsByClassName('ad-container ')).map( el => el.innerHTML = '' );
 
 var observeDOM = (function(){
   var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -46,15 +46,21 @@ var observeDOM = (function(){
   }
 })();
 
-
-// Observe a specific DOM element:
-observeDOM( document.body, function(m) {
+/*
+observeDOM( document, function(m) {
   m.forEach( record => {
     var added = record.addedNodes[0];
-    if (/^ad-/.test(added?.className)) {
+    if (/^ad-/.test(added?.className)) { 
       added.innerHTML = '';
     };
   });
 });
+*/
 
+
+adContainers = [].slice.call(document.getElementsByClassName('ad-container '));
+premium = [].slice.call(document.querySelectorAll('.premium-banner-outer'));
+[].slice.call(document.querySelectorAll('.promotedlink')).map( el => el.innerHTML = '' );
+adContainers.map( el => el.parentElement.innerHTML = '' );
+premium.map( el => el.parentElement.innerHTML = '' );
 

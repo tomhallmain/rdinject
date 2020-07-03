@@ -1,7 +1,7 @@
 
 // Handle writing to document
 
-files = ['helpers.js', 'base.js', 'agent.js', 'reporter.js']
+files = ['helpers.js', 'base.js', 'setup.js', 'agent.js', 'reporter.js']
 files.map( file => loadScript(file) );
 
 function loadScript(fileName) {

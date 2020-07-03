@@ -99,13 +99,13 @@ function getHighLowPosts(voteChance) {
   };
 };
 function normalizeScores(voteChance) {
-  const {high, low, voteHigh, voteLow} = getHighLowPosts(voteChance);
+  const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(voteChance);
   upvotePosts(voteLow);
   downvotePosts(voteHigh);
   console.log('Tried upvoting ' + voteLow.length + ' low score posts ' +
-    'out of ' + low.length + ' total found');
+    'out of ' + lowTotal.length + ' total found');
   console.log('Tried downvoting ' + voteHigh.length + ' high score posts ' + 
-    'out of ' + high.length + ' total found');
+    'out of ' + highTotal.length + ' total found');
   console.log('Less craziness is usually good.');
 };
 function echoChamber(voteChance) {
