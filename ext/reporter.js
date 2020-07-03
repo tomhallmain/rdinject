@@ -33,13 +33,13 @@ function postCountsByUser(posts, postCountMin) {
 function getPostScoresByUser(users, postCountMin) {
   // assumes unique set of users provided
   var dataByUser = new Array;
-  for (var i = 0; i < users.length; i++) {
-    var userPosts = getUserPosts(users[i]);
+  for (var user of users) {
+    var userPosts = getUserPosts(user);
     var postScores = userPosts.map( post => postScore(post) );
     var totalScore = sum(postScores);
     var scoresCount = postScores.length;
     dataByUser.push({
-      user: users[i],
+      user: user,
       scores: postScores,
       totalScore: sum(postScores),
       postCount: scoresCount,
@@ -115,18 +115,18 @@ function userPostStatistics(users, numUsers) {
     };
   } else {
     if(typeof(users) == 'string') users = [users];
-    for (i = 0; i < users.length; i++) {
-      var posts = getUserPosts(users[i]);
+    for (var user of users) {
+      var posts = getUserPosts(user);
       if (posts.length == 0) {
-        console.log('No comments found for user ' + users[i]);
+        console.log('No comments found for user ' + user);
       } else {
-        var userPostScores = postScoresByUser(users[i])[0];
+        var userPostScores = postScoresByUser(user)[0];
         var postScores = postScores || [];
         postScores.concat(userPostScores);
-        console.log('Statistics on current page for user ' + users[i] + ':');
+        console.log('Statistics on current page for user ' + user + ':');
         console.log('Total number of posts:   ' + userPostScores.postCount);
-        console.log('Upvoted posts:           ' + getHighPosts([users[i]]).length);
-        console.log('Downvoted posts:         ' + getLowPosts([users[i]]).length);
+        console.log('Upvoted posts:           ' + getHighPosts([user]).length);
+        console.log('Downvoted posts:         ' + getLowPosts([user]).length);
         console.log('Total post score:        ' + userPostScores.totalScore);
         console.log('Post score average:      ' + userPostScores.average);
         console.log('Removed posts:           ' + removedPosts(posts).length);
@@ -141,13 +141,13 @@ function postLengthsByUser(users) {
   users = (typeof(users) == 'string' ? [users] : users || getUsers());
   // assumes unique set of users provided
   var dataByUser = new Array;
-  for (var i = 0; i < users.length; i++) {
-    var userPosts = getUserPosts(users[i]);
+  for (var user of users) {
+    var userPosts = getUserPosts(user);
     var postLengths = userPosts.map( post => postLength(post) );
     var totalLengths = sum(postLengths);
     var lengthsCount = postLengths.length;
     dataByUser.push({
-      user: users[i],
+      user: user,
       lengths: postLengths,
       totalLengths: totalLengths,
       postCount: lengthsCount,
@@ -201,8 +201,8 @@ function cleanPunctuation(word) {
   // Remove punctuation
   const punctuation = ['.', "\n", '!', '?', ',', '(', ')', '"', '/']
   if (punctuation.some( cha => word.indexOf(cha) != -1 )) {
-    for (i = 0; i < punctuation.length; i++) {
-      if (word.indexOf(punctuation[i]) != -1) word.replace(/\punctuation[i]/g, '');
+    for (var cha of punctuation) {
+      if (word.indexOf(cha) != -1) word.replace(/\cha/g, '');
     };
   };
   return word
@@ -228,12 +228,12 @@ function wordCountsGraph(wordCounts) {
   wordCounts = wordCounts.slice(0, 150);
   const maxCount = wordCounts[0][1];
   const scaleFactor = 8
-  for(i = 0; i < wordCounts.length; i++) {
-    var word = wordCounts[i][0];
-    var count = wordCounts[i][1];
+  wordCounts.forEach( wc => {
+    var word = wc[0];
+    var count = wc[1];
     var countLength = Math.floor(count/maxCount * getBrowserWidth()/scaleFactor);
     console.log(`%c ${Array(countLength).join('█')} ${word}`, 'color: green');
-  };
+  });
 };
 function wcg(wordCounts) { wordCountsGraph(wordCounts) };
 

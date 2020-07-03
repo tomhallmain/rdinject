@@ -1,13 +1,28 @@
 
+// Handle writing to document
+
+files = ['helpers.js', 'base.js', 'agent.js', 'reporter.js']
+files.map( file => loadScript(file) );
+
 function loadScript(fileName) {
   var s = document.createElement('script');
   s.src = chrome.runtime.getURL(fileName);
   s.onload = function() { this.remove() };
-  (document.head || document.documentElement).appendChild(s);
+  appendScript(s);
 };
 
-files = ['helpers.js', 'base.js', 'agent.js', 'reporter.js']
-files.map( file => loadScript(file) );
+function fireEvent(toFire) {
+  var s = document.createElement('script');
+  s.appendChild(document.createTextNode(toFire));
+  appendScript(s);
+};
+
+function appendScript(script) {
+  (document.head || document.documentElement).appendChild(script);
+};
+
+
+// Handle messages
 
 chrome.runtime.onMessage.addListener(messageHandler);
 
@@ -33,7 +48,7 @@ function messageHandler(message) {
       case 'echo':            return 'echoChamber()'; break;
       case 'normalize':       return 'normalizeScores()'; break;
       case 'scroll':          return 'scroll(' + postFilter + ')'; break;
-      case 'reserved':        return ''; break;
+      case 'next':            return 'nextPage()'; break;
       case 'expand':          return 'expandPosts()'; break;
       case 'collapse':        return 'collapsePosts(' + postFilter + ')'; break;
       default: console.log('Message not understood');
@@ -42,11 +57,4 @@ function messageHandler(message) {
   console.log(event);
   if (event) fireEvent(event);
 };
-
-function fireEvent(toFire) {
-  var s = document.createElement('script');
-  s.appendChild(document.createTextNode(toFire + ';'));
-  (document.head || document.documentElement).appendChild(s);
-};
-
 

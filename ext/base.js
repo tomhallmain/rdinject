@@ -27,8 +27,12 @@ if (postLink && (postCommentCount() > 600 || postCommentCount() <= 400)) {
 
 
 function getOriginalPosts() {
-  return [].slice.call(document.querySelectorAll('.thing.odd'))
+  posts = [].slice.call(document.querySelectorAll('.thing.odd'))
     .concat([].slice.call(document.querySelectorAll('.thing.even')));
+  return posts.filter( p => ! isAd(p) );
+};
+function isAd(originalPost) {
+  return originalPost.dataset.promoted === 'true';
 };
 function getOriginalPost() {
   return getOriginalPosts().filter( p => p.dataset.type == 'link' )[0];
@@ -104,8 +108,8 @@ function getHighPosts(users) {
     return getPosts().reduce( (p,c) => (postScore(c) > 1 && p.push(c),p), []);
   } else {
     var posts = new Array;
-    for (var i = 0; i < users.length; i++) {
-      var userHighPosts = getUserPosts(users[i]).reduce((p,c) => (postScore(c) > 1 && p.push(c),p), []);
+    for (var user of users) {
+      var userHighPosts = getUserPosts(user).reduce((p,c) => (postScore(c) > 1 && p.push(c),p), []);
       posts = posts.concat(userHighPosts);
     };
     return posts;
@@ -116,8 +120,8 @@ function getLowPosts(users) {
     return getPosts().reduce( (p,c) => (postScore(c) <= 0 && p.push(c),p), []); 
   } else {
     var posts = new Array
-    for (var i = 0; i < users.length; i++) {
-      var userLowPosts = getUserPosts(users[i]).reduce((p,c) => (postScore(c) <= 0 && p.push(c),p), []);
+    for (var user of users) {
+      var userLowPosts = getUserPosts(user).reduce((p,c) => (postScore(c) <= 0 && p.push(c),p), []);
       posts = posts.concat(userLowPosts);
     };
     return posts;
@@ -128,8 +132,8 @@ function getSingleVotePosts(users) {
     return getPosts().reduce( (p,c) => (postScore(c) == 1 && p.push(c),p), []); 
   } else {
     var posts = new Array
-    for (var i = 0; i < users.length; i++) {
-      var userLowPosts = getUserPosts(users[i]).reduce((p,c) => (postScore(c) == 1 && p.push(c),p), []);
+    for (var user of users) {
+      var userLowPosts = getUserPosts(user).reduce((p,c) => (postScore(c) == 1 && p.push(c),p), []);
       posts = posts.concat(userLowPosts);
     };
     return posts;
@@ -140,8 +144,8 @@ function getPostsInScoreRange(min, max, users) {
     return getPosts().reduce( (p,c) => (postScore(c) <= max && postScore(c) >= min && p.push(c),p), []); 
   } else {
     var posts = new Array
-    for (var i = 0; i < users.length; i++) {
-      var userLowPosts = getUserPosts(users[i]).reduce((p,c) => {
+    for (var user of users) {
+      var userLowPosts = getUserPosts(user).reduce((p,c) => {
         (postScore(c) <= max && postScore(c) >= min && p.push(c),p), [];
       });
       posts = posts.concat(userLowPosts);

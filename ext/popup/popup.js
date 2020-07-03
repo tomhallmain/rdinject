@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
   mapBtn( select('.echo'),          'echo'           );
   mapBtn( select('.normalize'),     'normalize'      );
   mapBtn( select('.scroll'),        'scroll'         );
-  mapBtn( select('.reserved'),      'reserved'       );
+  mapBtn( select('.next'),          'next'           );
   mapBtn( select('.expand'),        'expand'         );
   mapBtn( select('.collapse'),      'collapse'       );
   mapInput( select('.searchUsers')  );
