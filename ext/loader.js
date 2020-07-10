@@ -30,12 +30,17 @@ function messageHandler(message) {
   console.log('Content script received message: ');
   console.log(message);
   var selection = message['buttonPressed'];
-  var user = (message['searchUsers'] ? "'" + message['searchUsers'] + "'" : 'null');
-  var textSearch = message['searchPosts'];
-  const postFilter = ( 
-    textSearch ? 'searchPosts(' + "'" + textSearch + "'" + ', null, null, ' + user + ')' :
-    'searchPostsRegex(".+", null, ' + user + ')'
-  );
+  if (message['searchUsers'] == null && message['searchPosts'] == null) { 
+    var postFilter = 'getPosts()'
+  } else {
+    var user = (message['searchUsers'] ? "'" + message['searchUsers'] + "'" : 'null');
+    var textSearch = message['searchPosts'];
+    var postFilter = ( 
+      textSearch ? 
+      'searchPosts(' + "'" + textSearch + "'" + ', null, null, ' + user + ')'
+      : 'getUserPosts(' + user + ')'
+    );
+  };
   var event = (function(selection, user, postFilter) {
     switch (selection) {
       case 'userPostStats':   return 'ups(' + user + ')'; break;
