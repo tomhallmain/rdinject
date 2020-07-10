@@ -19,6 +19,9 @@
     "default_title": "RDInject",
     "default_popup": "popup/index.html"
   },
+  "icons": {
+    "128": "assets/loweffortalien.png"
+  },
   "permissions": [
     "https://*/*",
     "http://*/*",
