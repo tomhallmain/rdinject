@@ -125,8 +125,8 @@ function userPostStatistics(users, numUsers) {
         postScores.concat(userPostScores);
         console.log('Statistics on current page for user ' + user + ':');
         console.log('Total number of posts:   ' + userPostScores.postCount);
-        console.log('Upvoted posts:           ' + getHighPosts([user]).length);
-        console.log('Downvoted posts:         ' + getLowPosts([user]).length);
+        console.log('Upvoted posts:           ' + getHighPosts(posts).length);
+        console.log('Downvoted posts:         ' + getLowPosts(posts).length);
         console.log('Total post score:        ' + userPostScores.totalScore);
         console.log('Post score average:      ' + userPostScores.average);
         console.log('Removed posts:           ' + removedPosts(posts).length);

@@ -3,8 +3,8 @@
 
 
 function getOriginalPosts() {
-  posts = [].slice.call(document.querySelectorAll('.thing.odd'))
-    .concat([].slice.call(document.querySelectorAll('.thing.even')));
+  posts = [].slice.call(document.querySelectorAll('.thing.odd:not(.reddit-link)'))
+    .concat([].slice.call(document.querySelectorAll('.thing.even:not(.reddit-link)')));
   return posts.filter( p => ! isAd(p) );
 };
 function isAd(originalPost) {
@@ -21,7 +21,11 @@ function check(posts) { return posts || getPosts(); };
 
 function getPosts(post) {
   var base = post || document;
-  return [].slice.call(base.getElementsByClassName('thing comment'));
+  if (postLink) {
+    return [].slice.call(base.getElementsByClassName('thing comment'));
+  } else {
+    return getOriginalPosts();
+  };
 };
 function getExpandedPosts() { 
   return [].slice.call(document.getElementsByClassName('thing noncollapsed comment'));
@@ -47,7 +51,9 @@ function mostActiveTable(numUsers) {
 };
 function getControversialUsers(posts) {
   var users = getActiveUsers();
-  return users.filter( user => getHighPosts([user]).length > 0 && getLowPosts([user]).length > 0 );
+  return users.filter( user => {
+    getHighPosts(posts, [user]).length > 0 && getLowPosts(posts, [user]).length > 0
+  });
 };
 function scrollUser(user, postIndex) {
   scroll(getUserPosts(user)[postIndex || 0]);
@@ -79,9 +85,10 @@ function postScore(post) {
   var score = post.getElementsByClassName('score unvoted')[0];
   return ( score ? parseInt(score.getAttribute('title')) : 1 )
 };
-function getHighPosts(users) {
+function getHighPosts(posts, users) {
+  posts = check(posts);
   if ( empty(users) ) {
-    return getPosts().reduce( (p,c) => (postScore(c) > 1 && p.push(c),p), []);
+    return posts.reduce( (p,c) => (postScore(c) > 1 && p.push(c),p), []);
   } else {
     var posts = new Array;
     for (var user of users) {
@@ -91,9 +98,10 @@ function getHighPosts(users) {
     return posts;
   };
 };
-function getLowPosts(users) {
+function getLowPosts(posts, users) {
+  posts = check(posts);
   if ( empty(users) ) {
-    return getPosts().reduce( (p,c) => (postScore(c) <= 0 && p.push(c),p), []); 
+    return posts.reduce( (p,c) => (postScore(c) <= 0 && p.push(c),p), []); 
   } else {
     var posts = new Array
     for (var user of users) {

@@ -85,12 +85,13 @@ function up(posts, overwriteVotes) {
 };
 function down(posts, overwriteVotes) {
   posts = posts || (overwriteVotes ? getPosts() : unvotedPosts());
-  randomVoting( posts, 0.0001, true, 0.7)
+  randomVoting( posts, 0.0001, true, 0.7 );
 };
-function getHighLowPosts(voteChance) {
+function getHighLowPosts(posts, voteChance) {
+  posts = check(posts);
   voteChance = voteChance || 0.7
-  highPosts = getHighPosts();
-  lowPosts = getLowPosts();
+  highPosts = getHighPosts(posts);
+  lowPosts = getLowPosts(posts);
   return {
     highTotal: highPosts.length,
     lowTotal: lowPosts.length,
@@ -98,8 +99,8 @@ function getHighLowPosts(voteChance) {
     voteLow: chanceFilter(lowPosts, voteChance)
   };
 };
-function normalizeScores(voteChance) {
-  const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(voteChance);
+function normalizeScores(posts, voteChance) {
+  const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(posts, voteChance);
   upvotePosts(voteLow);
   downvotePosts(voteHigh);
   console.log('Tried upvoting ' + voteLow.length + ' low score posts ' +
@@ -108,8 +109,8 @@ function normalizeScores(voteChance) {
     'out of ' + highTotal.length + ' total found');
   console.log('Less craziness is usually good.');
 };
-function echoChamber(voteChance) {
-  const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(voteChance);
+function echoChamber(posts, voteChance) {
+  const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(posts, voteChance);
   upvotePosts(voteHigh);
   downvotePosts(voteLow);
   console.log('Tried upvoting ' + voteHigh.length + ' high score posts ' +
