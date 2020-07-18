@@ -8,7 +8,7 @@ function sleep(milliseconds) {
   while (currentDate - date < milliseconds);
 };
 function scroll(args) {
-  var element = (args.length > 1 ? args[0] : args);
+  var element = (Array.isArray(args) ? args[0] : args);
   element.scrollIntoView();
 };
 function sortUncased(arr) {
@@ -16,6 +16,9 @@ function sortUncased(arr) {
 };
 function sum(arr) {
   return (arr.length == 0 || arr[0].length == 0 ? 0 : arr.reduce((a,b) => a + b));
+};
+function loglog(n) {
+  return Math.log(Math.log(n));
 };
 function strToDate(timestring) {
   if ( typeof(timestring) != 'string' ) return false;

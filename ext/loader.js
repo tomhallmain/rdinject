@@ -46,8 +46,8 @@ function messageHandler(message) {
       case 'userPostStats':   return 'ups(' + user + ')'; break;
       case 'getDebates':      return 'getDebates()'; break;
       case 'highlightActive': return 'highlightActive()'; break;
-      case 'wordCounts':      return 'wcg(wordCounts(' + postFilter + '))'; break;
-      case 'ngrams':          return 'wcg(ngramsCounts(' + postFilter + '))'; break;
+      case 'wordCounts':      return 'wcg(' + postFilter + ')'; break;
+      case 'ngrams':          return 'ngr(' + postFilter + ')'; break;
       case 'up':              return 'up(' + postFilter + ')'; break;
       case 'down':            return 'down(' + postFilter + ')'; break;
       case 'echo':            return 'echoChamber()'; break;

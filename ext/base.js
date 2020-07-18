@@ -243,6 +243,8 @@ function getUserPosts(users) {
     console.log('Please provide a username or list of users in an array.');
     return;
   } else if (typeof(users) == 'string') {
+    const quote = new RegExp('"', 'g');
+    if (/".+"/.test(users)) { users = users.replace(quote, '') }
     users = [users];
   };
   return getPosts().reduce( (p,c) => (users.indexOf(c.dataset.author) > -1 && p.push(c),p), [] );
@@ -294,6 +296,27 @@ function getProfanePosts(posts) {
   posts == check(posts);
   return posts.reduce( (p,c) => (hasProfanity(c) && p.push(c),p), []);
 };
+function yelling(text) {
+  if (text) return /[A-Z]{2,}\s+[A-Z]{2,}/.test(text);
+}
+function slowtalk(text) {
+  if (text) return /\w+\.\s\w+\.\s\w+\./.test(text);
+};
+function inquisition(text) {
+  if (text) return /[\!|\?][\!|\?][\!|\?]/.test(text);
+};
+function mocker(text) {
+  if (text) return /[A-Z][a-z][A-Z][a-z][A-Z]/.test(text);
+};
+function hasDramaPattern(post) {
+  const text = getPostText(post);
+  return yelling(text) || slowtalk(text) || inquisition(text) || mocker(text);
+};
+function getDramaPosts(posts) {
+  posts = check(posts);
+  return posts.reduce( (p,c) => (hasDramaPattern(c) && p.push(c),p), []);
+};
+
 function searchPosts(string, cased, posts, user) {
   posts = posts || (user == null ? getPosts() : getUserPosts(user));
   if (cased) { 

@@ -161,6 +161,12 @@ function assistLowScore(posts, users, postCountMin) {
   upvotePosts(getUserPosts(lowUsers));
   console.log('Upvoted votable posts for users: ' + lowUsers.join(', '));
 };
+function praiseUnique(posts, numUsers) {
+  numUsers = numUsers || 10;
+  const uniqUsers = wordUniquenessByUser(posts, 15).slice(0,numUsers)
+    .map( user => user[0] );
+  up(getUserPosts(uniqUsers));
+};
 function userComplement(user, direction) {
   // Add method to vote on the posts of other users related to the posts of a
   // specific user

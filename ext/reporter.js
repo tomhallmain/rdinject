@@ -162,15 +162,86 @@ function postLengthsByUser(users) {
 
 
 function wordCounts(posts) {
-  posts = check(posts);
-  const bags = posts.map( post => bagOfWords(post) );
-  words = bags.flat()
-  words = words.filter( word => word.length > 1 && !stopword(word) );
-  var counts = Object.create(null);
+  const words = getAllWords(posts);
+  var counts = {};
   words.forEach( word => counts[word] = (counts[word] ? counts[word] + 1 : 1) );
-  counts = Object.entries(counts).sort( (a,b) => b[1] - a[1] );
-  counts = counts.filter( word => word[0] != '' );
   return counts
+};
+function countsArray(countsObj) {
+  var counts = Object.entries(countsObj).sort( (a,b) => b[1] - a[1] );
+  return counts = counts.filter( word => word[0] != '' );
+}
+function wordCountsByUser(posts) {
+  posts = check(posts);
+  const users = getUsers(posts);
+  var userWordCounts = {};
+  users.forEach( user => {
+    userWordCounts[user] = wordCounts(getUserPosts(user));
+  });
+  return userWordCounts
+};
+function wordUniquenessByUser(posts, minUserWords) {
+  posts = check(posts);
+  const allWords = wordCounts(posts);
+  const userCounts = wordCountsByUser(posts);
+  const users = Object.keys(userCounts);
+  var userScores = [];
+  const allWordsCount = sum(Object.values(allWords));
+  users.forEach( user => {
+    var userWords = userCounts[user];
+    var wordScores = [];
+    var numUserWords = Object.keys(userWords).length;
+    var userCountTotal = sum(Object.values(userWords));
+    if (!minUserWords || numUserWords >= minUserWords) { 
+      Object.entries(userWords).forEach( entry => {
+        var word = entry[0];
+        var userCount = entry[1];
+        var inverseCount = allWords[word] - userCount + 1;
+        var wordVal = userCount * (allWordsCount - userCountTotal) / inverseCount;
+        wordScores.push(Math.log(wordVal));
+      });
+    };
+    var userScore = sum(wordScores) / numUserWords * Math.tanh(numUserWords);
+    userScores.push([user, userScore]);
+  });
+  userScores = userScores.sort( (a,b) => b[1] - a[1] );
+  return userScores;
+};
+function uniqueUserWords(posts, minUserWords) {
+  const allWordCounts = wordCounts(posts);
+  const allWords = Object.keys(allWordCounts);
+  const userCounts = wordCountsByUser(posts);
+  const users = Object.keys(userCounts);
+  var uniqueWords = {};
+  users.forEach( user => {
+    var userWords = userCounts[user];
+    var userCountTotal = sum(Object.values(userWords));
+    if (!minUserWords || numUserWords >= minUserWords) {
+      Object.entries(userWords).forEach( entry => {
+        var word = entry[0];
+        var userCount = entry[1];
+        var allCount = allWordCounts[word];
+        var wordUnique = userCount / allCount > 0.95
+        if (wordUnique) {
+          uniqueWords[user] ? uniqueWords[user].push(word) : uniqueWords[user] = [word];
+        };
+      });
+    };
+  })
+  return uniqueWords;
+};
+function uniqueUsers(posts) {
+  userWords = uniqueUserWords(posts);
+  users = Object.keys(userWords);
+  users.forEach( user => {
+    if (userWords[user].length < 3) { delete userWords[user] }
+  });
+  return Object.keys(userWords)
+};
+function nonuniqueUsers(posts) {
+  const users = getUsers(posts);
+  const unique = uniqueUsers(posts);
+  return users.filter( user => unique.indexOf(user) === -1 );
 };
 function ngrams(posts, n) {
   posts = check(posts);
@@ -185,7 +256,7 @@ function ngrams(posts, n) {
 };
 function ngramsCounts(posts, n) {
   grams = ngrams(posts, n);
-  var counts = Object.create(null);
+  var counts = {};
   grams.forEach( function(gram) {
     counts[gram] = (counts[gram] ? counts[gram] + 1 : 1);
   });
@@ -194,18 +265,12 @@ function ngramsCounts(posts, n) {
   return counts
 };
 function bagOfWords(post) {
-  const wordv = getPostText(post)?.toLowerCase().split(' ');
-  return wordv.map( word => cleanPunctuation(word) );
+  return getPostText(post)?.toLowerCase()
+    .split(/\W+/)
+    .filter( word => word.length > 1 && !stopword(word) );
 };
-function cleanPunctuation(word) {
-  // Remove punctuation
-  const punctuation = ['.', "\n", '!', '?', ',', '(', ')', '"', '/']
-  if (punctuation.some( cha => word.indexOf(cha) != -1 )) {
-    for (var cha of punctuation) {
-      if (word.indexOf(cha) != -1) word.replace(/\cha/g, '');
-    };
-  };
-  return word
+function getAllWords(posts) {
+  return check(posts).map( post => bagOfWords(post) ).flat();
 };
 function stopword(word) {
   // Remove unnecessary words from counts
@@ -221,10 +286,11 @@ function stopword(word) {
     'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so',
     'than', 'too', 'very', 'can', 'will', 'just', 'don', 'could', 'should', 'would', 'now', 'll',
     're', 've', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'mustn', 'needn',
-    'shouldn', 'wasn', 'weren', 'won', 'wouldn']
+    'shouldn', 'wasn', 'weren', 'won', 'wouldn', 'https', 'www']
   return stopwords.indexOf(word) > -1;
 };
 function wordCountsGraph(wordCounts) {
+  wordCounts = wordCounts || countsArray(wordCounts())
   wordCounts = wordCounts.slice(0, 150);
   const maxCount = wordCounts[0][1];
   const scaleFactor = 8
@@ -235,7 +301,7 @@ function wordCountsGraph(wordCounts) {
     console.log(`%c ${Array(countLength).join('█')} ${word}`, 'color: green');
   });
 };
-function wcg(wordCounts) { wordCountsGraph(wordCounts) };
-
+function wcg(posts) { wordCountsGraph(countsArray(wordCounts(posts))) };
+function ngr(posts) { wordCountsGraph(ngramsCounts(posts)) };
 
 
