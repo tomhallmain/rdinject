@@ -9,21 +9,19 @@ const initialLink = window.location.href;
 const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/;
 const postLink = postLinkRe.test(initialLink);
 
-/*
-const showQuery = '?limit=500';
-const showing500Posts = initialLink.includes(showQuery);
-if (postLink && !showing500Posts) {
-  if (postCommentCount() > 400) {
-    window.location.replace(initialLink + showQuery)
+
+function tryCommentCount() {
+  try {
+    postCommentCount();
+  } catch(e) {
+    return 0;
   };
 };
-*/
 
-if (postLink && (postCommentCount() > 600)) {
+if (postLink && (tryCommentCount() > 600)) {
   expandPosts();
   window.scrollTo(0, 0);
 };
-
 
 var observeDOM = (function(){
   var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -46,16 +44,6 @@ var observeDOM = (function(){
   }
 })();
 
-/*
-observeDOM( document, function(m) {
-  m.forEach( record => {
-    var added = record.addedNodes[0];
-    if (/^ad-/.test(added?.className)) { 
-      added.innerHTML = '';
-    };
-  });
-});
-*/
 
 
 adContainers = [].slice.call(document.getElementsByClassName('ad-container '));
