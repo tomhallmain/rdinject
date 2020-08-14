@@ -1,4 +1,3 @@
-
 // Setup
 
 var filterSettings = {};
@@ -33,19 +32,23 @@ function mapInput(input) {
   });
 };
 
+
 // Message passing
 
 let activeTabParams = {
   active: true,
   currentWindow: true
 };
-function sendMsg(message, filterSettings) {
+function sendMsg(message) {
   chrome.tabs.query(activeTabParams, messagePush);
   function messagePush(tabs) {
     console.log(message);
     console.log({'tab': tabs[0]});
     chrome.tabs.sendMessage(tabs[0].id, message);
   };
+};
+function applyFilter(msg) {
+  return Object.assign({}, msg, filterSettings);
 };
 
 
@@ -55,11 +58,6 @@ function btnPressed(msgVal) {
   console.log('button pressed for ' + msgVal);
   sendMsg(applyFilter({'buttonPressed': msgVal}));
 };
-
-function applyFilter(msg) {
-  return Object.assign({}, msg, filterSettings);
-};
-
 function updateFilter(inputClass, input) {
   filterSettings[inputClass] = input;
   console.log('changed filter for ' + inputClass + ' to ' + input);

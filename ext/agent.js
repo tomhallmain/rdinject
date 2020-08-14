@@ -185,3 +185,54 @@ function nextPage() {
 };
 
 
+document.addEventListener("keydown", function(e) {
+  if (e.defaultPrevented) return;
+
+  switch (e.key) {
+    case "ArrowLeft":
+      prevPage();
+      break;
+    case "ArrowRight":
+      nextPage();
+      break;
+    case "ArrowUp":
+      if (e.shiftKey) {
+        selection = window.getSelection().toString()
+        if (selection.length > 2) {
+          if (getUsers().indexOf(selection) > 0) {
+            up(getUserPosts(selection));
+          } else {
+            up(searchPosts(selection));
+          };
+        } else {
+          up(getPosts());
+        };
+      } else if (e.altKey) {
+        echoChamber();
+      };
+      break;
+    case "ArrowDown":
+      if (e.shiftKey) {
+        selection = window.getSelection().toString()
+        if (selection.length > 2) {
+          if (getUsers().indexOf(selection) > 0) {
+            down(getUserPosts(selection));
+          } else {
+            down(searchPosts(selection));
+          };
+        } else {
+          down(getPosts());
+        };
+      } else if (e.altKey) {
+        normalizeScores();
+      };
+      break;
+    default:
+      return;
+  };
+
+  event.preventDefault();
+}, true);
+
+
+
