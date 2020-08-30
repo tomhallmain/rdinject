@@ -18,11 +18,6 @@ function tryCommentCount() {
   };
 };
 
-if (postLink && (tryCommentCount() > 600)) {
-  expandPosts();
-  window.scrollTo(0, 0);
-};
-
 var observeDOM = (function(){
   var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
@@ -45,10 +40,20 @@ var observeDOM = (function(){
 })();
 
 
-
 adContainers = [].slice.call(document.getElementsByClassName('ad-container '));
 premium = [].slice.call(document.querySelectorAll('.premium-banner-outer'));
 [].slice.call(document.querySelectorAll('.promotedlink')).map( el => el.innerHTML = '' );
 adContainers.map( el => el.parentElement.innerHTML = '' );
 premium.map( el => el.parentElement.innerHTML = '' );
+
+if (postLink) {
+  if (tryCommentCount() > 600) {
+    expandPosts();
+  }
+  if (typeof postCountsByUser != 'undefined') {
+    highlightActive();
+    getDebates();
+  }
+  window.scrollTo(0, 0);
+};
 

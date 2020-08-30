@@ -361,6 +361,8 @@ function getDebates() {
         posts.map( post => {
           postTag(post).style.backgroundColor = color;
           postTag(post).style.color = 'white'
+          postTag(post).querySelector('.author').style.color = 'white'
+          postTag(post).querySelector('.userattrs').style.color = 'white'
         });
       });
       debateBase.debatePosts = debateBase.debatePosts.flat()

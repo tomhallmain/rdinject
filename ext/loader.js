@@ -1,8 +1,12 @@
 
 // Handle writing to document
 
-files = ['helpers.js', 'base.js', 'agent.js', 'setup.js', 'reporter.js']
-files.map( file => loadScript(file) );
+files = ['helpers.js', 'base.js', 'agent.js', 'reporter.js', 'setup.js']
+files.map( file => {
+  loadScript(file)
+  const date = Date.now()
+  while (Date.now() - date < 80);
+});
 
 function loadScript(fileName) {
   var s = document.createElement('script');
@@ -14,12 +18,20 @@ function loadScript(fileName) {
 function fireEvent(toFire) {
   var s = document.createElement('script');
   s.appendChild(document.createTextNode(toFire));
+  s.onload = function() { this.remove() };
   appendScript(s);
 };
 
 function appendScript(script) {
   (document.head || document.documentElement).appendChild(script);
 };
+
+function checkScript(scriptId) {
+  var script = document.querySelector();
+  script.addEventListener('load', function() {
+    hljs.initHighlightingOnLoad(); 
+  });
+}
 
 
 // Handle messages
