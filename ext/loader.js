@@ -1,30 +1,29 @@
 
 // Handle writing to document
 
+fireEvent('var n_scripts = 0');
 files = ['helpers.js', 'base.js', 'agent.js', 'reporter.js', 'setup.js']
 files.map( file => {
   loadScript(file)
-  const date = Date.now()
-  while (Date.now() - date < 80);
 });
 
 function loadScript(fileName) {
   var s = document.createElement('script');
   s.src = chrome.runtime.getURL(fileName);
-  s.onload = function() { this.remove() };
+  s.onload = function() { this.remove() }
   appendScript(s);
-};
+}
 
 function fireEvent(toFire) {
   var s = document.createElement('script');
   s.appendChild(document.createTextNode(toFire));
-  s.onload = function() { this.remove() };
+  s.onload = function() { this.remove() }
   appendScript(s);
-};
+}
 
 function appendScript(script) {
   (document.head || document.documentElement).appendChild(script);
-};
+}
 
 function checkScript(scriptId) {
   var script = document.querySelector();
@@ -52,7 +51,7 @@ function messageHandler(message) {
       'searchPosts(' + "'" + textSearch + "'" + ', null, null, ' + user + ')'
       : 'getUserPosts(' + user + ')'
     );
-  };
+  }
   var event = (function(selection, user, postFilter) {
     switch (selection) {
       case 'userPostStats':   return 'ups(' + user + ')'; break;
@@ -69,9 +68,9 @@ function messageHandler(message) {
       case 'expand':          return 'expandPosts()'; break;
       case 'collapse':        return 'collapsePosts(' + postFilter + ')'; break;
       default: console.log('Message not understood');
-    };
+    }
   })(selection, user, postFilter);
   console.log(event);
   if (event) fireEvent(event);
-};
+}
 

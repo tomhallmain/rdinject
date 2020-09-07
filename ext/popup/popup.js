@@ -25,12 +25,12 @@ function select(className) {
 }
 function mapBtn(btn, msgVal) {
   btn.addEventListener('click', function() { btnPressed(msgVal) });
-};
+}
 function mapInput(input) {
   input.addEventListener('change', function() { 
     updateFilter(input.className, input.value);
   });
-};
+}
 
 
 // Message passing
@@ -38,18 +38,18 @@ function mapInput(input) {
 let activeTabParams = {
   active: true,
   currentWindow: true
-};
+}
 function sendMsg(message) {
   chrome.tabs.query(activeTabParams, messagePush);
   function messagePush(tabs) {
     console.log(message);
     console.log({'tab': tabs[0]});
     chrome.tabs.sendMessage(tabs[0].id, message);
-  };
-};
+  }
+}
 function applyFilter(msg) {
   return Object.assign({}, msg, filterSettings);
-};
+}
 
 
 // Actions
@@ -57,11 +57,11 @@ function applyFilter(msg) {
 function btnPressed(msgVal) {
   console.log('button pressed for ' + msgVal);
   sendMsg(applyFilter({'buttonPressed': msgVal}));
-};
+}
 function updateFilter(inputClass, input) {
   filterSettings[inputClass] = input;
   console.log('changed filter for ' + inputClass + ' to ' + input);
-};
+}
 
 
 

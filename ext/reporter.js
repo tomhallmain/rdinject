@@ -16,19 +16,19 @@ function getCounts(userPosts, postCountMin) {
       index++;
     } else {
       counts[index].postCount++;
-    };
+    }
     prev = userPosts[i];
-  };
+  }
   postCountMin = postCountMin || 1;
   counts = counts.filter( user => user.postCount >= postCountMin );
   return counts.sort( (a,b) => b.postCount - a.postCount );
-};
+}
 function postCountsByUser(posts, postCountMin) {
   posts = check(posts)
   var authorsByPosts = posts.map( post => post.dataset.author ).filter( user => user );
   if (postCountMin == null) postCountMin = 1;
   return getCounts(authorsByPosts, postCountMin);
-};
+}
 
 function getPostScoresByUser(users, postCountMin) {
   // assumes unique set of users provided
@@ -45,24 +45,22 @@ function getPostScoresByUser(users, postCountMin) {
       postCount: scoresCount,
       average: (scoresCount == 0 ? 0 : Math.round(totalScore / scoresCount))
     });
-  };
+  }
   if (postCountMin != null) dataByUser = dataByUser.filter( user => user.postCount >= postCountMin );
   return dataByUser.sort( (a,b) => b.totalScore - a.totalScore );
-};
+}
 function postScoresByUser(users, postCountMin) {
   users = (typeof(users) == 'string' ? [users] : users || getUsers());
   if (postCountMin == null) userPostCount = 1;
   return getPostScoresByUser(users, postCountMin);
-};
+}
 
 
-function ups(users, numUsers) { userPostStatistics(users, numUsers) };
+function ups(users, numUsers) { userPostStatistics(users, numUsers) }
 function userPostStatistics(users, numUsers) {
   if (users == null) {
     var posts = getPosts();
-    if (posts.length == 0) {
-      console.log('No comments found!');
-    } else {
+    if (posts.length > 0) {
       var maxScorePost = [...posts].sort( (a,b) => postScore(b) - postScore(a) )[0];
       var postScores = postScoresByUser(getUsers(posts));
       var postScoresByAverage = [].slice.call(postScores).sort((a,b) => b.average - a.average);
@@ -108,13 +106,13 @@ function userPostStatistics(users, numUsers) {
       } else {
         console.log('Comments by original poster:     ' 
           + opComments.length + ' ' + opComments[0].dataset.author);
-      };
+      }
       console.log('Total my voted comments:         ' + votedPosts().length);
       console.log('Total my upvoted comments:       ' + upvotedPosts().length);
       console.log('Total my downvoted comments:     ' + downvotedPosts().length)
-    };
+    }
   } else {
-    if(typeof(users) == 'string') users = [users];
+    if (typeof(users) == 'string') users = [users];
     for (var user of users) {
       var posts = getUserPosts(user);
       if (posts.length == 0) {
@@ -130,11 +128,11 @@ function userPostStatistics(users, numUsers) {
         console.log('Total post score:        ' + userPostScores.totalScore);
         console.log('Post score average:      ' + userPostScores.average);
         console.log('Removed posts:           ' + removedPosts(posts).length);
-      };
-    };
-  };
+      }
+    }
+  }
   if (!empty(postScores)) console.table(postScores.slice(0, numUsers || 25));
-};
+}
 
 
 function postLengthsByUser(users) {
@@ -153,9 +151,9 @@ function postLengthsByUser(users) {
       postCount: lengthsCount,
       average: (lengthsCount == 0 ? 0 : Math.round(totalLengths / lengthsCount))
     });
-  };
+  }
   return dataByUser.sort( (a,b) => b.totalLengths - a.totalLengths );
-};
+}
 
 
 // Text Processing Methods
@@ -163,10 +161,10 @@ function postLengthsByUser(users) {
 
 function wordCounts(posts) {
   const words = getAllWords(posts);
-  var counts = {};
+  var counts = {}
   words.forEach( word => counts[word] = (counts[word] ? counts[word] + 1 : 1) );
   return counts
-};
+}
 function countsArray(countsObj) {
   var counts = Object.entries(countsObj).sort( (a,b) => b[1] - a[1] );
   return counts = counts.filter( word => word[0] != '' );
@@ -174,12 +172,12 @@ function countsArray(countsObj) {
 function wordCountsByUser(posts) {
   posts = check(posts);
   const users = getUsers(posts);
-  var userWordCounts = {};
+  var userWordCounts = {}
   users.forEach( user => {
     userWordCounts[user] = wordCounts(getUserPosts(user));
   });
   return userWordCounts
-};
+}
 function wordUniquenessByUser(posts, minUserWords) {
   posts = check(posts);
   const allWords = wordCounts(posts);
@@ -200,19 +198,19 @@ function wordUniquenessByUser(posts, minUserWords) {
         var wordVal = userCount * (allWordsCount - userCountTotal) / inverseCount;
         wordScores.push(Math.log(wordVal));
       });
-    };
+    }
     var userScore = sum(wordScores) / numUserWords * Math.tanh(numUserWords);
     userScores.push([user, userScore]);
   });
   userScores = userScores.sort( (a,b) => b[1] - a[1] );
   return userScores;
-};
+}
 function uniqueUserWords(posts, minUserWords) {
   const allWordCounts = wordCounts(posts);
   const allWords = Object.keys(allWordCounts);
   const userCounts = wordCountsByUser(posts);
   const users = Object.keys(userCounts);
-  var uniqueWords = {};
+  var uniqueWords = {}
   users.forEach( user => {
     var userWords = userCounts[user];
     var userCountTotal = sum(Object.values(userWords));
@@ -224,12 +222,12 @@ function uniqueUserWords(posts, minUserWords) {
         var wordUnique = userCount / allCount > 0.95
         if (wordUnique) {
           uniqueWords[user] ? uniqueWords[user].push(word) : uniqueWords[user] = [word];
-        };
+        }
       });
-    };
+    }
   })
   return uniqueWords;
-};
+}
 function uniqueUsers(posts) {
   userWords = uniqueUserWords(posts);
   users = Object.keys(userWords);
@@ -237,12 +235,12 @@ function uniqueUsers(posts) {
     if (userWords[user].length < 3) { delete userWords[user] }
   });
   return Object.keys(userWords)
-};
+}
 function nonuniqueUsers(posts) {
   const users = getUsers(posts);
   const unique = uniqueUsers(posts);
   return users.filter( user => unique.indexOf(user) === -1 );
-};
+}
 function ngrams(posts, n) {
   posts = check(posts);
   n = n || 2;
@@ -253,25 +251,25 @@ function ngrams(posts, n) {
          .filter( gram => !(/^\s*$/.test(gram)) )
   );
   return grams.flat();
-};
+}
 function ngramsCounts(posts, n) {
   grams = ngrams(posts, n);
-  var counts = {};
+  var counts = {}
   grams.forEach( function(gram) {
     counts[gram] = (counts[gram] ? counts[gram] + 1 : 1);
   });
   counts = Object.entries(counts).sort( (a,b) => b[1] - a[1] );
   counts = counts.filter( gram => gram[0] != '' );
   return counts
-};
+}
 function bagOfWords(post) {
   return getPostText(post)?.toLowerCase()
     .split(/\W+/)
     .filter( word => word.length > 1 && !stopword(word) );
-};
+}
 function getAllWords(posts) {
   return check(posts).map( post => bagOfWords(post) ).flat();
-};
+}
 function stopword(word) {
   // Remove unnecessary words from counts
   const stopwords = ['me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your',
@@ -288,7 +286,7 @@ function stopword(word) {
     're', 've', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'mustn', 'needn',
     'shouldn', 'wasn', 'weren', 'won', 'wouldn', 'https', 'www']
   return stopwords.indexOf(word) > -1;
-};
+}
 function wordCountsGraph(wordCounts) {
   wordCounts = wordCounts || countsArray(wordCounts())
   wordCounts = wordCounts.slice(0, 150);
@@ -300,8 +298,10 @@ function wordCountsGraph(wordCounts) {
     var countLength = Math.floor(count/maxCount * getBrowserWidth()/scaleFactor);
     console.log(`%c ${Array(countLength).join('█')} ${word}`, 'color: green');
   });
-};
-function wcg(posts) { wordCountsGraph(countsArray(wordCounts(posts))) };
-function ngr(posts) { wordCountsGraph(ngramsCounts(posts)) };
+}
+function wcg(posts) { wordCountsGraph(countsArray(wordCounts(posts))) }
+function ngr(posts) { wordCountsGraph(ngramsCounts(posts)) }
 
+if (!n_scripts) var n_scripts = 0;
+n_scripts++
 

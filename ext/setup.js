@@ -9,14 +9,13 @@ const initialLink = window.location.href;
 const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/;
 const postLink = postLinkRe.test(initialLink);
 
-
-function tryCommentCount() {
-  try {
-    postCommentCount();
-  } catch(e) {
-    return 0;
-  };
-};
+function buildButton(text, className, script, parentElement) {
+  var b = document.createElement('button')
+  b.textContent = text;
+  b.className = className;
+  b.setAttribute('onclick', script);
+  parentElement?.appendChild(b);
+}
 
 var observeDOM = (function(){
   var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -46,14 +45,42 @@ premium = [].slice.call(document.querySelectorAll('.premium-banner-outer'));
 adContainers.map( el => el.parentElement.innerHTML = '' );
 premium.map( el => el.parentElement.innerHTML = '' );
 
+
+// Async handling
+
+function sleepAsync(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function loadData(func, callback) {
+  while(typeof func !== "function") {
+    await sleepAsync(200);
+  }
+  callback();
+}
+
 if (postLink) {
-  if (tryCommentCount() > 600) {
+  while (n_scripts<4) { sleepAsync(120) }
+  loadData(postCommentCount, function() {
+    commentCount = postCommentCount();
+  });
+  if (commentCount > 600) {
     expandPosts();
   }
+  loadData(getPosts, function() {
+    getPosts().forEach( p => {
+      var u = p.dataset.author;
+      buildButton('U', 'ub', 'uup("' + u + '")', postTag(p));
+      buildButton('D', 'db', 'dup("' + u + '")', postTag(p));
+    });
+  });
   if (typeof postCountsByUser != 'undefined') {
     highlightActive();
     getDebates();
   }
   window.scrollTo(0, 0);
-};
+}
+
+
+
 
