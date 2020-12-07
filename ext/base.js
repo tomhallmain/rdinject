@@ -1,6 +1,8 @@
 
 // General Methods
 
+var userColor = 0
+var UserColor = {}
 
 function getOriginalPosts() {
   posts = [].slice.call(document.querySelectorAll('.thing.odd:not(.reddit-link)'))
@@ -346,36 +348,40 @@ function getDebates() {
     var children = getChildPosts(basePost);
     var leaves = children.filter( post =>
       getChildPosts(post).length <= 1 && getParentPost(getGrandparentPost(post)) != null
-    );
+    )
     if (leaves.some( leaf => getGrandparentPost(leaf)?.dataset.author == leaf.dataset.author )) {
-      var debaters = postCountsByUser(children, 2).map( user => user.user );
+      var debaters = postCountsByUser(children, 2).map( user => user.user )
       var debateBase = {
         basePost: basePost,
         basePostAuthor: basePost.dataset.author,
         debaters: debaters,
         debatePosts: []
       }
-      debaters.map( (user, i) => {
-        color = colorset[i % nColors];
-        posts = getUserPosts(user);
+      debaters.map( user => {
+        posts = getUserPosts(user)
         debateBase.debatePosts.push(posts)
-        posts.map( post => {
-          postTag(post).style.backgroundColor = color;
-          postTag(post).style.color = 'white'
-          postTag(post).querySelector('.author').style.color = 'white'
-          postTag(post).querySelector('.userattrs').style.color = 'white'
-        });
-      });
+        if (!UserColor[user]) {
+          color = colorset[userColor++ % nColors]
+          UserColor[user] = true
+          posts.map( post => {
+            postTag(post).style.backgroundColor = color
+            postTag(post).style.color = 'white'
+            postTag(post).querySelector('.author').style.color = 'white'
+            postTag(post).querySelector('.userattrs').style.color = 'white'
+          })
+        }
+      })
       debateBase.debatePosts = debateBase.debatePosts.flat()
       postTag(basePost).style.fontWeight = 'bold'
       userAttrs(basePost).textContent = (userAttrs(basePost).textContent 
         + '(Debated post: ' + debateBase.debaters.length + ' debaters)')
-      debates.push(debateBase);
+      debates.push(debateBase)
     }
-  });
-  if (debates[0]){
-    scroll(debates[0].basePost);
-    return debates;
+  })
+
+  if (debates[0]) {
+    scroll(debates[0].basePost)
+    return debates
   }
 }
 

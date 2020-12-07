@@ -46,39 +46,42 @@ function upvotePosts(posts) {
     console.log('Upvoted ' + votable_posts.length + ' posts');
     if (unvotable > 0) {
       console.log(unvotable + ' posts given were unvotable.');
-    } }
+    }
+  }
 }
 function downvotePosts(posts) {
   if (posts.length == 0) {
-    console.log('No posts found to downvote!');
+    if (debug) console.log('No posts found to downvote!');
     return;
   }
   votable_posts = votablePosts(posts);
   var unvotable = posts.length - votable_posts.length;
   voteAll(getPostDownvotes(votable_posts));
-  console.log('Downvoted ' + votable_posts.length + ' posts');
-  if (unvotable > 0) {
-    console.log(unvotable + ' posts given were unvotable.');
+  if (debug) {
+    console.log('Downvoted ' + votable_posts.length + ' posts');
+    if (unvotable > 0) {
+      console.log(unvotable + ' posts given were unvotable.');
+    }
   }
 }
 function upvoteUserPosts(username) {
   var posts = getUserPosts(username);
   if (posts.length == 0) {
-    console.error('No posts found for user ' + username);
+    if (debug) console.error('No posts found for user ' + username);
     return;
   }
   upvotePosts(posts);
-  console.log('Tried upvoting ' + posts.length + ' posts found for user');
+  if (debug) console.log('Tried upvoting ' + posts.length + ' posts found for user');
 }
 function uup(usr) { upvoteUserPosts(usr) }
 function downvoteUserPosts(username) {
   var posts = getUserPosts(username);
   if (posts.length == 0) {
-    console.error('No posts found for user ' + username);
+    if (debug) console.error('No posts found for user ' + username);
     return;
   }
   downvotePosts(posts);
-  console.log('Tried downvoting ' + posts.length + ' posts found for user');
+  if (debug) console.log('Tried downvoting ' + posts.length + ' posts found for user');
 }
 function dup(usr) { downvoteUserPosts(usr) }
 

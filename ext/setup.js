@@ -1,20 +1,20 @@
 
 // Conditional Settings On Page Load
 
-document.getElementsByTagName('body')[0].style.filter = "brightness(80%)";
-document.getElementsByTagName('body')[0].style.backgroundColor = "#92a8d1";
+document.getElementsByTagName('body')[0].style.filter = "brightness(80%)"
+document.getElementsByTagName('body')[0].style.backgroundColor = "#92a8d1"
 
-const baseUrl = 'https://www.reddit.com/';
-const initialLink = window.location.href;
-const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/;
-const postLink = postLinkRe.test(initialLink);
+const baseUrl = 'https://www.reddit.com/'
+const initialLink = window.location.href
+const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/
+const postLink = postLinkRe.test(initialLink)
 
 function buildButton(text, className, script, parentElement) {
   var b = document.createElement('button')
-  b.textContent = text;
-  b.className = className;
-  b.setAttribute('onclick', script);
-  parentElement?.appendChild(b);
+  b.textContent = text
+  b.className = className
+  b.setAttribute('onclick', script)
+  parentElement?.appendChild(b)
 }
 
 var observeDOM = (function(){
@@ -25,15 +25,15 @@ var observeDOM = (function(){
     if( MutationObserver ){
       // define a new observer
       var obs = new MutationObserver(function(mutations, observer){
-        callback(mutations);
+        callback(mutations)
       })
       // have the observer observe foo for changes in children
-      obs.observe( obj, { childList:true, subtree:true });
+      obs.observe( obj, { childList:true, subtree:true })
     }
 
     else if( window.addEventListener ){
-      obj.addEventListener('DOMNodeInserted', callback, false);
-      obj.addEventListener('DOMNodeRemoved', callback, false);
+      obj.addEventListener('DOMNodeInserted', callback, false)
+      obj.addEventListener('DOMNodeRemoved', callback, false)
     }
   }
 })();
@@ -52,33 +52,33 @@ function sleepAsync(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function loadData(func, callback) {
+async function loadFunc(func, callback) {
   while(typeof func !== "function") {
-    await sleepAsync(200);
+    await sleepAsync(200)
   }
   callback();
 }
 
 if (postLink) {
   while (n_scripts<4) { sleepAsync(120) }
-  loadData(postCommentCount, function() {
-    commentCount = postCommentCount();
-  });
-  if (commentCount > 600) {
-    expandPosts();
-  }
-  loadData(getPosts, function() {
+//  loadFunc(postCommentCount, function() {
+//    commentCount = postCommentCount()
+//  });
+//  if (commentCount > 600) {
+//    expandPosts();
+//  }
+  loadFunc(getPosts, function() {
     getPosts().forEach( p => {
-      var u = p.dataset.author;
-      buildButton('U', 'ub', 'uup("' + u + '")', postTag(p));
-      buildButton('D', 'db', 'dup("' + u + '")', postTag(p));
+      var u = p.dataset.author
+      buildButton('U', 'ub', 'uup("' + u + '")', postTag(p))
+      buildButton('D', 'db', 'dup("' + u + '")', postTag(p))
     });
   });
   if (typeof postCountsByUser != 'undefined') {
     highlightActive();
     getDebates();
   }
-  window.scrollTo(0, 0);
+//  window.scrollTo(0, 0);
 }
 
 
