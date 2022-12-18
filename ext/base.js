@@ -21,6 +21,21 @@ function postCommentCount() {
 
 function check(posts) { return posts || getPosts(); }
 
+function getPostLinks() {
+  if (!postLinks) {
+    postLinks = [].slice.call(document.querySelectorAll('.comments'))
+        .filter(link => {
+            return parseInt(link.textContent.replace(/ ?comments?/, '')) > 0
+        })
+    postLinks.sort(function(a, b) {
+      aCount = parseInt(a.textContent.replace(/ ?comments?/, ''))
+      bCount = parseInt(b.textContent.replace(/ ?comments?/, ''))
+      return aCount - bCount
+    })
+  }
+  return postLinks
+}
+
 function getPosts(post) {
   var base = post || document;
   if (postLink) {
@@ -277,13 +292,16 @@ function getChildPosts(post) {
 function postTag(post) {
   return post.querySelector('.tagline');
 }
+function postText(post) {
+  return post.querySelector('.usertext-body');
+}
 function userAttrs(post) {
   return post.querySelector('.userattrs');
 }
 
 
 function getPostText(post) {
-  var text = post.getElementsByClassName('usertext-body')[0].textContent;
+  var text = postText(post)?.textContent;
   return (typeof(text) == 'string' ? text.slice(0,-2) : '');
 }
 function postLength(post) {
@@ -291,28 +309,33 @@ function postLength(post) {
 }
 function hasProfanity(post) {
   var text = getPostText(post).toLowerCase();
-  const profanityDict = ['fuck', ' shit', ' piss', ' bitch', ' cunt']
-  return profanityDict.some( word => text.indexOf(word) != -1 )
+  return text ? profane(text) : false
 }
 function getProfanePosts(posts) {
   posts == check(posts);
-  return posts.reduce( (p,c) => (hasProfanity(c) && p.push(c),p), []);
+  return posts.reduce( (p,c) => (hasProfanity(c) && p.push(c),p), [])
 }
 function yelling(text) {
-  if (text) return /[A-Z]{2,}\s+[A-Z]{2,}/.test(text);
+  return /[A-Z]{2,}\s+[A-Z]{2,}/.test(text)
 }
 function slowtalk(text) {
-  if (text) return /\w+\.\s\w+\.\s\w+\./.test(text);
+  return /\w+\.\s\w+\.\s\w+\./.test(text)
 }
 function inquisition(text) {
-  if (text) return /[\!|\?][\!|\?][\!|\?]/.test(text);
+  return /[\!|\?][\!|\?][\!|\?]/.test(text)
 }
 function mocker(text) {
-  if (text) return /[A-Z][a-z][A-Z][a-z][A-Z]/.test(text);
+  return /[A-Z][a-z][A-Z][a-z][A-Z]/.test(text)
+}
+function hater(text) {
+  return /(^| )((f|r)acis|stupid|dumb|creep|mayo|wypipo|scum|gross)/i.test(text)
+}
+function profane(text) {
+  return /(^| )(fuck|shit|piss|bitch|cunt|asshol)/i.test(text)
 }
 function hasDramaPattern(post) {
-  const text = getPostText(post);
-  return yelling(text) || slowtalk(text) || inquisition(text) || mocker(text);
+  const text = getPostText(post)
+  return text ? profane(text) || hater(text) || yelling(text) || slowtalk(text) || inquisition(text) || mocker(text) : false
 }
 function getDramaPosts(posts) {
   posts = check(posts);
@@ -403,6 +426,12 @@ function highlightActive() {
   } else {
     if (debug) console.log('No highly active users found in loaded posts!');
   }
+}
+
+function highlightDrama() {
+  getDramaPosts().map( post => {
+    postText(post).style.backgroundColor = 'white'
+  })
 }
 
 if (!n_scripts) var n_scripts = 0

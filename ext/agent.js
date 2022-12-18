@@ -85,15 +85,17 @@ function downvoteUserPosts(username) {
 }
 function dup(usr) { downvoteUserPosts(usr) }
 
-function up(posts, overwriteVotes) {
+function up( posts, overwriteVotes, voteChance ) {
   posts = posts || (overwriteVotes ? getPosts() : unvotedPosts());
-  randomVoting( posts, 0.7 );
+  voteChance = voteChance || 0.7
+  randomVoting( posts, voteChance );
 }
-function down(posts, overwriteVotes) {
+function down( posts, overwriteVotes, voteChance ) {
   posts = posts || (overwriteVotes ? getPosts() : unvotedPosts());
-  randomVoting( posts, 0.0001, true, 0.7 );
+  voteChance = voteChance || 0.7
+  randomVoting( posts, 0.0001, true, voteChance );
 }
-function getHighLowPosts(posts, voteChance) {
+function getHighLowPosts( posts, voteChance ) {
   posts = check(posts);
   voteChance = voteChance || 0.7
   highPosts = getHighPosts(posts);
@@ -105,7 +107,7 @@ function getHighLowPosts(posts, voteChance) {
     voteLow: chanceFilter(lowPosts, voteChance)
   }
 }
-function normalizeScores(posts, voteChance) {
+function normalizeScores( posts, voteChance ) {
   const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(posts, voteChance);
   upvotePosts(voteLow);
   downvotePosts(voteHigh);
@@ -117,7 +119,7 @@ function normalizeScores(posts, voteChance) {
     console.log('Less craziness is usually good.');
   }
 }
-function echoChamber(posts, voteChance) {
+function echoChamber( posts, voteChance ) {
   const {highTotal, lowTotal, voteHigh, voteLow} = getHighLowPosts(posts, voteChance);
   upvotePosts(voteHigh);
   downvotePosts(voteLow);
@@ -129,7 +131,13 @@ function echoChamber(posts, voteChance) {
     console.log('Thanks for keeping the echo going!');
   }
 }
-function randomVoting(posts, upvoteChance, includeDownvotes, downvoteChance) {
+function softEcho( posts, voteChance ) {
+  upvotePosts(getHighPosts(posts))
+}
+function softNormalize( posts, voteChance ) {
+  upvotePosts(getLowPosts())
+}
+function randomVoting( posts, upvoteChance, includeDownvotes, downvoteChance ) {
   posts = check(posts);
   var upPosts = chanceFilter(posts, (upvoteChance || 0.5));
   if (!empty(upPosts)) { upvotePosts(upPosts) }
@@ -142,7 +150,7 @@ function randomVoting(posts, upvoteChance, includeDownvotes, downvoteChance) {
   }
   if (debug) console.log('Randomly voted on ' + posts.length + ' posts if votable');
 }
-function randomDropVoting(posts, dropChance, upvoteChance) {
+function randomDropVoting( posts, dropChance, upvoteChance ) {
   posts = check(posts);
   var dropPosts = chanceFilter(posts, (dropChance || 0.7));
   votePosts = posts.filter( post => dropPosts.indexOf(post) == -1 );
@@ -163,7 +171,7 @@ function hinderProfane(posts) {
   posts = check(posts);
   downvotePosts(getProfanePosts(posts));
 }
-function assistLowScore(posts, users, postCountMin) {
+function assistLowScore( posts, users, postCountMin ) {
   posts = check(posts);
   var lowUsers = postScoresByUser(users, postCountMin).filter( user =>
     user.scores.some( score => score < 1 )
@@ -171,7 +179,7 @@ function assistLowScore(posts, users, postCountMin) {
   upvotePosts(getUserPosts(lowUsers));
   if (debug) console.log('Upvoted votable posts for users: ' + lowUsers.join(', '));
 }
-function praiseUnique(posts, numUsers) {
+function praiseUnique( posts, numUsers ) {
   numUsers = numUsers || 10;
   const uniqUsers = wordUniquenessByUser(posts, 15).slice(0,numUsers)
     .map( user => user[0] );
@@ -182,6 +190,15 @@ function userComplement(user, direction) {
   // specific user
 }
 
+function openPopularThreads() {
+  if (!postLink) {
+    postLinks = getPostLinks()
+    nLinks = postLinks.length
+    start = Math.max(nLinks - 5, 0)
+    end = Math.max(Math.min(nLinks, 5), 0)
+    postLinks.splice(start, end).map(link => window.open(link.href, "_blank"))
+  }
+}
 
 function prevPage() {
   // Jumps to previous page of posts
@@ -200,45 +217,53 @@ document.addEventListener("keydown", function(e) {
 
   switch (e.key) {
     case "ArrowLeft":
-      prevPage();
-      break;
+      if (e.shiftKey) {
+        window.history.go(-1)
+      } else {
+        prevPage()
+      }
+      break
     case "ArrowRight":
-      nextPage();
-      break;
+      if (e.shiftKey) {
+        openPopularThreads()
+      } else {
+        nextPage()
+      }
+      break
     case "ArrowUp":
       if (e.shiftKey) {
         selection = window.getSelection().toString()
         if (selection.length > 2) {
-          if (getUsers().indexOf(selection) > 0) {
-            up(getUserPosts(selection));
+          if (getUsers().indexOf(selection) > -1) {
+            up(getUserPosts(selection))
           } else {
-            up(searchPosts(selection));
+            up(searchPosts(selection))
           }
         } else { up(getPosts()) }
       } else if (e.altKey) {
-        echoChamber();
+        echoChamber()
       }
       break;
     case "ArrowDown":
       if (e.shiftKey) {
         selection = window.getSelection().toString()
         if (selection.length > 2) {
-          if (getUsers().indexOf(selection) > 0) {
-            down(getUserPosts(selection));
+          if (getUsers().indexOf(selection) > -1) {
+            down(getUserPosts(selection))
           } else {
-            down(searchPosts(selection));
+            down(searchPosts(selection))
           }
         } else { down(getPosts()) }
       } else if (e.altKey) {
-        normalizeScores();
+        normalizeScores()
       }
       break;
     default:
       return;
   }
 
-  event.preventDefault();
-}, true);
+  event.preventDefault()
+}, true)
 
 
 if (!n_scripts) var n_scripts = 0;

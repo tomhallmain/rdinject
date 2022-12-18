@@ -45,6 +45,9 @@ function empty(data) {
 function getLast(arr) {
   return arr.slice(-1)[0];
 }
+function xpath(xpathExpression, base) {
+  return document.evaluate(xpathExpression, base || document).iterateNext()
+}
 function getBrowserWidth() {
   return Math.max(
     document.body.scrollWidth,

@@ -6,8 +6,25 @@ document.getElementsByTagName('body')[0].style.backgroundColor = "#92a8d1"
 
 const baseUrl = 'https://www.reddit.com/'
 const initialLink = window.location.href
-const postLinkRe = /reddit\.com\/r\/[-_A-Za-z]+\/comments/
+const postLinkRe = /reddit\.com\/r\/[-_A-Za-z0-9]+\/comments/
 const postLink = postLinkRe.test(initialLink)
+var channel, isDirty, postLinks
+
+if (postLink) {
+  re1 = /.+reddit.com\/r\//
+  re2 = /\/.+/
+  channel = initialLink.replace(re1, "")
+  channel = channel.replace(re2, "")
+
+  const commentArea = document.querySelector(".commentarea")
+  isDirty = (null != commentArea.querySelector(".entry.likes")
+      || null != commentArea.querySelector(".entry.dislikes"))
+
+}
+else {
+  isDirty = (null != document.querySelector(".entry.likes")
+      || null != document.querySelector(".entry.dislikes"))
+}
 
 function buildButton(text, className, script, parentElement) {
   var b = document.createElement('button')
@@ -59,7 +76,7 @@ async function loadFunc(func, callback) {
   callback();
 }
 
-if (postLink) {
+if (postLink && false) {
   while (n_scripts<4) { sleepAsync(120) }
 //  loadFunc(postCommentCount, function() {
 //    commentCount = postCommentCount()
@@ -78,6 +95,36 @@ if (postLink) {
     highlightActive();
     getDebates();
   }
+  if (typeof getDramaPosts != 'undefined') {
+    highlightDrama();
+  }
+  if (!isDirty && typeof up != 'undefined' 
+      && typeof searchPosts != 'undefined') {
+
+    switch (channel) {
+      // + echo
+      // - echo
+      case 'a':
+        echoChamber()
+        break;
+      // + up
+      case 'b':
+        softEcho()
+        break;
+      // - up
+      case 'd':
+        up()
+        break;
+      case 'e':
+        softNormalize()
+        break;
+      default:
+        break;
+    }
+
+    isDirty = true
+  }
+
 //  window.scrollTo(0, 0);
 }
 

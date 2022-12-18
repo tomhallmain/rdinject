@@ -2,6 +2,8 @@
 
 Simple extension for interfacing with Reddit DOM.
 
+NOTE: This extension was set up for Manifest V2 only. A version for Manifest V3 is not planned.
+
 ## Setup
 - Clone the repo
 - Open chrome://extensions URL on Chrome browser
