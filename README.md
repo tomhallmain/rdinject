@@ -1,6 +1,6 @@
 # rdinject
 
-Simple extension for interfacing with Reddit DOM.
+> **This project is a concept only**, intended to demonstrate how a browser extension can interact with a web page's DOM. It should not be used. Features such as automated voting likely violate Reddit's Terms of Service, and the extension targets the legacy Manifest V2 API which is no longer supported in modern Chrome.
 
 NOTE: This extension was set up for Manifest V2 only. A version for Manifest V3 is not planned.
 
